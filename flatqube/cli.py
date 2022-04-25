@@ -211,18 +211,22 @@ def config_():
 
 
 @currency.command()
-@click.argument('names', type=str, nargs=-1)
+@click.argument('names', nargs=-1)
+@click.option('-l', '--list', 'currency_list', default=None, help="The list of tokens to show from the config")
 @click.option('-u', '--update', is_flag=True, default=False, show_default=True, help='Auto update data')
 @click.option('-i', '--update-interval', type=float, default=cli_cfg.currency.show.update_interval, show_default=True,
               help='Auto update interval in seconds')
 @click.pass_context
-def show(ctx: click.Context, names: list[str], update: bool, update_interval: float):
+def show(ctx: click.Context, names: list[str], currency_list: Optional[str], update: bool, update_interval: float):
     """Show currencies info
     """
 
-    if not names:
-        # default currencies to show
-        names = ['wever', 'qube', 'bridge']
+    if not names and not currency_list:
+        names = config.currency_lists['everscale']
+    elif not names and currency_list:
+        names = config.currency_lists[currency_list.lower()]
+    else:
+        ctx.fail("'-l/--list' option is not allowed if NAMES were set.")
 
     client: FlatQubeClient = ctx.obj['client']
 

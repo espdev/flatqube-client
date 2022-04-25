@@ -73,6 +73,31 @@ currencies:
   RUM: "0:38a4c196c7fe22cbf0cda034ddda284aa208e2dba7707b96f65914420ba3f580"
   COLA: "0:9dd2cd82cbfd74a963be1ef1fd1a1f3e25f60e0b8c742f8b862df378b9a5e265"
 
+# The list of currencies to show
+currency_lists:
+  everscale:
+    - "WEVER"
+    - "QUBE"
+    - "BRIDGE"
+
+  wrapped:
+    - "WETH"
+    - "WBTC"
+
+  stable:
+    - "USDT"
+    - "USDC"
+    - "DAI"
+    - "EUPI"
+
+  memes:
+    - "DUSA"
+    - "SOON"
+    - "MOON"
+    - "GRE"
+    - "BARBARA"
+    - "RUM"
+    - "COLA"
 
 farming_pools:
   QUBE/WEVER: "0:f96da52e928cf4d8e54dcec0e7f7fefddfb7592590f05705dcaa9f211102fbc5"
