@@ -145,7 +145,7 @@ def print_currencies_info(currencies_info: list[CurrencyInfo]):
     price_max_len, price_change_max_len = max_lens(price_values)
     tvl_max_len, tvl_change_max_len = max_lens(tvl_values)
     vol_24h_max_len, vol_24h_change_max_len = max_lens(volume_24h_values)
-    vol_7d_max_len = max(max(len_decimal(volume_7d) for volume_7d in volume_7d_values), len(vol_7d_title))
+    vol_7d_max_len = max(max(len_decimal(volume_7d) for volume_7d in volume_7d_values), len(vol_7d_title) - 1)
 
     s = ''
     price_sl = 0
