@@ -37,6 +37,12 @@ cli_colors:
     fg: "red"
     bold: true
 
+cli:
+  currency:
+    show:
+      update_interval: 5.0  # seconds
+
+
 # The list of all FlatQube currencies in the whitelist
 currencies:
   # Everscale ecosystem

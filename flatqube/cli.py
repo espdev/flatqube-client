@@ -12,6 +12,7 @@ from .client import FlatQubeClient
 from .models import CurrencyInfo
 
 
+cli_cfg = config.cli
 cli_colors = config.cli_colors
 
 
@@ -211,8 +212,9 @@ def config_():
 
 @currency.command()
 @click.argument('names', type=str, nargs=-1)
-@click.option('-u', '--update', is_flag=True, default=False, help='Auto update data')
-@click.option('-i', '--update-interval', type=float, default=5.0, help='Auto update interval in seconds')
+@click.option('-u', '--update', is_flag=True, default=False, show_default=True, help='Auto update data')
+@click.option('-i', '--update-interval', type=float, default=cli_cfg.currency.show.update_interval, show_default=True,
+              help='Auto update interval in seconds')
 @click.pass_context
 def show(ctx: click.Context, names: list[str], update: bool, update_interval: float):
     """Show currencies info
