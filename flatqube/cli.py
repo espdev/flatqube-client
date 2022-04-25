@@ -21,7 +21,7 @@ cli_colors = config.cli_colors
 @click.group()
 @click.pass_context
 def cli(ctx: click.Context):
-    """FlatQube info CLI tool
+    """FlatQube client CLI tool
     """
 
     ctx.ensure_object(dict)
@@ -205,7 +205,8 @@ def add(ctx: click.Context, address: str):
 
 @cli.group()
 def currency():
-    pass
+    """FlatQube currencies info
+    """
 
 
 @currency.command(name='config')
@@ -215,7 +216,7 @@ def currency():
 @optgroup.option('--add', 'address_to_add', help='Add a currency to the config by its contract address')
 @click.pass_context
 def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str], address_to_add: Optional[str]):
-    """Show the current list of currencies in the config
+    """Currency config tools
     """
 
     if show_lists:
