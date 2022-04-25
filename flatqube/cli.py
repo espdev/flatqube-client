@@ -10,7 +10,7 @@ from click_option_group import optgroup, MutuallyExclusiveOptionGroup
 import humanize
 
 from .config import config, add_currency
-from .client import FlatQubeClient
+from .client import FlatQubeClient, CurrencySortOptions, CurrencySortOrders
 from .models import CurrencyInfo
 
 
@@ -111,7 +111,8 @@ def format_value(value_max_len: int, value: Decimal,
     return s, value_len
 
 
-def print_currencies_info(currencies_info: list[CurrencyInfo]):
+def print_currencies_info(currencies_info: list[CurrencyInfo],
+                          sort: CurrencySortOptions, sort_order: CurrencySortOrders):
     names = []
     price_values = []
     tvl_values = []
@@ -137,11 +138,37 @@ def print_currencies_info(currencies_info: list[CurrencyInfo]):
             quantize_value(currency_info.volume_7d)
         )
 
+    sort_indicator = ' ▲' if sort_order == CurrencySortOrders.ascend else ' ▼'
+    change_sort_indicator = '%'
+
+    if sort == CurrencySortOptions.price:
+        price_sort_indicator = sort_indicator
+    elif sort == CurrencySortOptions.price_change:
+        price_sort_indicator = sort_indicator + change_sort_indicator
+    else:
+        price_sort_indicator = ''
+
+    if sort == CurrencySortOptions.tvl:
+        tvl_sort_indicator = sort_indicator
+    elif sort == CurrencySortOptions.tvl_change:
+        tvl_sort_indicator = sort_indicator + change_sort_indicator
+    else:
+        tvl_sort_indicator = ''
+
+    if sort == CurrencySortOptions.volume24h:
+        volume_24h_sort_indicator = sort_indicator
+    elif sort == CurrencySortOptions.volume24h_change:
+        volume_24h_sort_indicator = sort_indicator + change_sort_indicator
+    else:
+        volume_24h_sort_indicator = ''
+
+    volume_7d_sort_indicator = sort_indicator if sort == CurrencySortOptions.volume7d else ''
+
     name_title = 'Name'
-    price_title = 'Price'
-    tvl_title = 'TVL'
-    vol_24h_title = '24h Volume'
-    vol_7d_title = '7d Volume'
+    price_title = 'Price' + price_sort_indicator
+    tvl_title = 'TVL' + tvl_sort_indicator
+    vol_24h_title = '24h Volume' + volume_24h_sort_indicator
+    vol_7d_title = '7d Volume' + volume_7d_sort_indicator
 
     name_max_len = max(len(name) for name in names)
     price_max_len, price_change_max_len = max_lens(price_values)
@@ -258,22 +285,36 @@ def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str], 
     click.echo(s, nl=False)
 
 
+sort_options = tuple(item.value for item in CurrencySortOptions)
+sort_orders = tuple(item.value for item in CurrencySortOrders)
+
+
 @currency.command()
 @click.argument('names', nargs=-1)
 @click.option('-l', '--list', 'currency_list', default=None, help="The list of tokens to show from the config")
+@click.option('-s', '--sort', type=click.Choice(sort_options), default=CurrencySortOptions.tvl.value,
+              show_default=True, help="Sort displayed currencies")
+@click.option('-o', '--sort-order', type=click.Choice(sort_orders), default=CurrencySortOrders.ascend.value,
+              show_default=True, help='Sort order')
 @click.option('-u', '--update', is_flag=True, default=False, show_default=True, help='Auto update data')
 @click.option('-i', '--update-interval', type=float, default=cli_cfg.currency.show.update_interval, show_default=True,
               help='Auto update interval in seconds')
 @click.pass_context
-def show(ctx: click.Context, names: list[str], currency_list: Optional[str], update: bool, update_interval: float):
+def show(ctx: click.Context, names: list[str],
+         currency_list: Optional[str],
+         sort: str, sort_order: str,
+         update: bool, update_interval: float):
     """Show currencies info
     """
+
+    sort = CurrencySortOptions(sort)
+    sort_order = CurrencySortOrders(sort_order)
 
     if not names and not currency_list:
         names = config.currency_lists['everscale']
     elif not names and currency_list:
         names = config.currency_lists[currency_list.lower()]
-    else:
+    elif names and currency_list:
         ctx.fail("'-l/--list' option is not allowed if NAMES were set.")
 
     client: FlatQubeClient = ctx.obj['client']
@@ -285,8 +326,8 @@ def show(ctx: click.Context, names: list[str], currency_list: Optional[str], upd
             sys.stdout.write("\033[F")
             sys.stdout.write("\033[K")
 
-        currencies_info = client.currencies(*names)
-        print_currencies_info(currencies_info)
+        currencies_info = client.currencies(*names, sort=sort, sort_order=sort_order)
+        print_currencies_info(currencies_info, sort, sort_order)
 
         if not update:
             break

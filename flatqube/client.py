@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional
+from typing import Optional, Union
+from enum import Enum
+from itertools import count
 
 import requests
 
@@ -10,6 +12,22 @@ from .models import CurrencyInfo
 
 class FlatQubeClientError(Exception):
     pass
+
+
+class CurrencySortOptions(str, Enum):
+    none = 'none'
+    price = 'price'
+    price_change = 'price-ch'
+    tvl = 'tvl'
+    tvl_change = 'tvl-ch'
+    volume24h = 'vol24h'
+    volume24h_change = 'vol24h-ch'
+    volume7d = 'vol7d'
+
+
+class CurrencySortOrders(str, Enum):
+    ascend = 'ascend'
+    descend = 'descend'
 
 
 class FlatQubeClient:
@@ -61,9 +79,14 @@ class FlatQubeClient:
 
         return self.currency_by_address(address=currency_address)
 
-    def currencies(self, *names: str) -> list[CurrencyInfo]:
+    def currencies(self, *names: str,
+                   sort: Union[str, CurrencySortOptions] = CurrencySortOptions.none,
+                   sort_order: Union[str, CurrencySortOrders] = CurrencySortOrders.ascend) -> list[CurrencyInfo]:
         """Get currencies info
         """
+
+        sort = CurrencySortOptions(sort)
+        sort_order = CurrencySortOrders(sort_order)
 
         currency_addresses = []
 
@@ -93,6 +116,31 @@ class FlatQubeClient:
 
         currencies_info = resp.json().get('currencies', [])
 
-        return [
+        currencies = [
             CurrencyInfo.parse_obj(currency_info) for currency_info in currencies_info
         ]
+
+        name_indices = {name: index for name, index in zip(names, count())}
+
+        def _sort_currencies_key(currency: CurrencyInfo):
+            if sort == CurrencySortOptions.none:
+                return name_indices[currency.name]
+            elif sort == CurrencySortOptions.price:
+                return currency.price
+            elif sort == CurrencySortOptions.price_change:
+                return currency.price_change
+            elif sort == CurrencySortOptions.tvl:
+                return currency.tvl
+            elif sort == CurrencySortOptions.tvl_change:
+                return currency.tvl_change
+            elif sort == CurrencySortOptions.volume24h:
+                return currency.volume_24h
+            elif sort == CurrencySortOptions.volume24h_change:
+                return currency.volume_change_24h
+            elif sort == CurrencySortOptions.volume7d:
+                return currency.volume_7d
+
+        reverse = True if sort_order == CurrencySortOrders.descend else False
+        currencies.sort(key=_sort_currencies_key, reverse=reverse)
+
+        return currencies
