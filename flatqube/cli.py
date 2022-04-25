@@ -296,8 +296,8 @@ def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str], 
     click.echo(s, nl=False)
 
 
-sort_options = tuple(item.value for item in CurrencySortOptions)
-sort_orders = tuple(item.value for item in CurrencySortOrders)
+sort_options = tuple(item.value for item in CurrencySortOptions)  # noqa
+sort_orders = tuple(item.value for item in CurrencySortOrders)  # noqa
 
 
 @currency.command()
