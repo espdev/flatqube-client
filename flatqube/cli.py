@@ -6,7 +6,9 @@ import time
 import sys
 
 import click
+from click_option_group import optgroup, MutuallyExclusiveOptionGroup
 import humanize
+
 from .config import config, add_currency
 from .client import FlatQubeClient
 from .models import CurrencyInfo
@@ -181,16 +183,38 @@ def print_currencies_info(currencies_info: list[CurrencyInfo]):
     click.echo(s, nl=False)
 
 
+def add(ctx: click.Context, address: str):
+    """Add a new currency by the contract address to the config
+    """
+
+    client: FlatQubeClient = ctx.obj['client']
+
+    try:
+        info = client.currency_by_address(address)
+    except Exception as err:
+        ctx.fail(f'{err}')
+        return
+
+    add_currency(info.name, info.address)
+
+    name = click.style(f'{info.name}', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
+    address = click.style(f'{info.address}', fg=cli_colors.value.fg, bold=cli_colors.value.bold)
+
+    click.echo(f"Currency {name} added with address {address}")
+
+
 @cli.group()
 def currency():
     pass
 
 
 @currency.command(name='config')
-@click.option('--show-lists', is_flag=True, default=False, help='Show token lists')
-@click.option('-l', '--list', 'currency_list', default=None, help='Show tokens from the given list')
+@optgroup.group('Config options', cls=MutuallyExclusiveOptionGroup)
+@optgroup.option('--show-lists', is_flag=True, default=False, help='Show token lists')
+@optgroup.option('-l', '--list', 'currency_list', help='Show tokens from the given list')
+@optgroup.option('--add', 'address_to_add', help='Add a currency to the config by its contract address')
 @click.pass_context
-def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str]):
+def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str], address_to_add: Optional[str]):
     """Show the current list of currencies in the config
     """
 
@@ -200,6 +224,10 @@ def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str]):
             s += f'{c_list}\n'
 
         click.echo(s, nl=False)
+        return
+
+    if address_to_add:
+        add(ctx, address_to_add)
         return
 
     if currency_list:
@@ -264,23 +292,3 @@ def show(ctx: click.Context, names: list[str], currency_list: Optional[str], upd
 
         time.sleep(update_interval)
         lines = len(currencies_info) + 1
-
-
-@currency.command()
-@click.argument('address', type=str, nargs=1)
-@click.pass_context
-def add(ctx: click.Context, address: str):
-    """Add a new currency by the contract address to the config
-    """
-
-    client: FlatQubeClient = ctx.obj['client']
-
-    try:
-        info = client.currency_by_address(address)
-    except Exception as err:
-        ctx.fail(f'{err}')
-        return
-
-    add_currency(info.name, info.address)
-
-    click.echo(f"Currency '{info.name}' added with address: {info.address}")
