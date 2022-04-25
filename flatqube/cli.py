@@ -18,16 +18,6 @@ cli_cfg = config.cli
 cli_colors = config.cli_colors
 
 
-@click.group()
-@click.pass_context
-def cli(ctx: click.Context):
-    """FlatQube client CLI tool
-    """
-
-    ctx.ensure_object(dict)
-    ctx.obj['client'] = FlatQubeClient()
-
-
 def quantize_value(value: Decimal, decimal_digits: Optional[int] = None, normalize: bool = True) -> Decimal:
     if not decimal_digits:
         value_int = value.to_integral_value()
@@ -219,7 +209,7 @@ def add(ctx: click.Context, address: str):
     try:
         info = client.currency_by_address(address)
     except Exception as err:
-        ctx.fail(f'{err}')
+        fail(ctx, 'Cannot get currency by address', err=err)
         return
 
     add_currency(info.name, info.address)
@@ -228,6 +218,26 @@ def add(ctx: click.Context, address: str):
     address = click.style(f'{info.address}', fg=cli_colors.value.fg, bold=cli_colors.value.bold)
 
     click.echo(f"Currency {name} added with address {address}")
+
+
+def fail(ctx: click.Context, message: str, err: Optional[Exception] = None):
+    """Print an error message and exit
+    """
+
+    message = f'{message}: {err}' if err else message
+    styled_message = click.style(message, fg=cli_colors.error.fg, bold=cli_colors.error.bold)
+
+    ctx.fail(styled_message)
+
+
+@click.group()
+@click.pass_context
+def cli(ctx: click.Context):
+    """FlatQube client CLI tool
+    """
+
+    ctx.ensure_object(dict)
+    ctx.obj['client'] = FlatQubeClient()
 
 
 @cli.group()
@@ -260,7 +270,8 @@ def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str], 
 
     if currency_list:
         if currency_list not in config.currency_lists:
-            ctx.fail(f"'{currency_list}' does not exist.")
+            fail(ctx, f"'{currency_list}' does not exist.")
+
         names = config.currency_lists[currency_list]
         currencies = {name: address for name, address in config.currencies.items() if name in names}
     else:
@@ -315,7 +326,7 @@ def show(ctx: click.Context, names: list[str],
     elif not names and currency_list:
         names = config.currency_lists[currency_list.lower()]
     elif names and currency_list:
-        ctx.fail("'-l/--list' option is not allowed if NAMES were set.")
+        fail(ctx, "'-l/--list' option is not allowed if NAMES were set.")
 
     client: FlatQubeClient = ctx.obj['client']
 
@@ -326,7 +337,12 @@ def show(ctx: click.Context, names: list[str],
             sys.stdout.write("\033[F")
             sys.stdout.write("\033[K")
 
-        currencies_info = client.currencies(*names, sort=sort, sort_order=sort_order)
+        try:
+            currencies_info = client.currencies(*names, sort=sort, sort_order=sort_order)
+        except Exception as err:
+            fail(ctx, f"Failed to get currencies info", err=err)
+            return
+
         print_currencies_info(currencies_info, sort, sort_order)
 
         if not update:

@@ -13,6 +13,10 @@ quantize:
     5: 0
 
 cli_colors:
+  error:
+    fg: "bright_red"
+    bold: true
+
   table:
     fg: "bright_black"
     bold: true
