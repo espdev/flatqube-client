@@ -160,7 +160,7 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
     vol_24h_title = '24h Volume' + volume_24h_sort_indicator
     vol_7d_title = '7d Volume' + volume_7d_sort_indicator
 
-    name_max_len = max(len(name) for name in names)
+    name_max_len = max(len(name) for name in names + [name_title])
     price_max_len, price_change_max_len = max_lens(price_values)
     tvl_max_len, tvl_change_max_len = max_lens(tvl_values)
     vol_24h_max_len, vol_24h_change_max_len = max_lens(volume_24h_values)
