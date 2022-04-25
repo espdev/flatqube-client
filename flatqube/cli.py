@@ -187,11 +187,30 @@ def currency():
 
 
 @currency.command(name='config')
-def config_():
+@click.option('--show-lists', is_flag=True, default=False, help='Show token lists')
+@click.option('-l', '--list', 'currency_list', default=None, help='Show tokens from the given list')
+@click.pass_context
+def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str]):
     """Show the current list of currencies in the config
     """
 
-    names, addresses = zip(*config.currencies.items())
+    if show_lists:
+        s = ''
+        for c_list in config.currency_lists:
+            s += f'{c_list}\n'
+
+        click.echo(s, nl=False)
+        return
+
+    if currency_list:
+        if currency_list not in config.currency_lists:
+            ctx.fail(f"'{currency_list}' does not exist.")
+        names = config.currency_lists[currency_list]
+        currencies = {name: address for name, address in config.currencies.items() if name in names}
+    else:
+        currencies = config.currencies
+
+    names, addresses = zip(*currencies.items())
     name_max_len = max(len(name) for name in names)
     indents = [' ' * (name_max_len - len(name)) for name in names]
 
