@@ -322,7 +322,7 @@ def show(ctx: click.Context, names: list[str],
     sort_order = CurrencySortOrders(sort_order)
 
     if not names and not currency_list:
-        names = config.currency_lists['everscale']
+        names = config.currency_lists[cli_cfg.currency.show.default_list]
     elif not names and currency_list:
         names = config.currency_lists[currency_list.lower()]
     elif names and currency_list:

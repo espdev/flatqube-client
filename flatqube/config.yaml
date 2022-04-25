@@ -44,6 +44,7 @@ cli_colors:
 cli:
   currency:
     show:
+      default_list: "everscale"
       update_interval: 5.0  # seconds
 
 
@@ -79,6 +80,8 @@ currencies:
 
 # The list of currencies to show
 currency_lists:
+  all: ${currencies}
+
   everscale:
     - "WEVER"
     - "QUBE"
