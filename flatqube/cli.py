@@ -12,6 +12,9 @@ from .client import FlatQubeClient
 from .models import CurrencyInfo
 
 
+cli_colors = config.cli_colors
+
+
 @click.group()
 @click.pass_context
 def cli(ctx: click.Context):
@@ -74,20 +77,33 @@ def format_value(value_max_len: int, value: Decimal,
     v_indent = value_indent(value_max_len, value)
     value_h = human_value(value)
 
-    s = click.style(f'|', fg='bright_black', bold=True)
+    s = click.style(f'|', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
     vs = f' {v_indent}${value_h} '
     value_len = len(vs)
-    s += click.style(vs, fg='white', bold=True)
+    s += click.style(vs, fg=cli_colors.value.fg, bold=cli_colors.value.bold)
 
     if value_change_max_len is not None and value_change is not None:
         value_change_indent = value_indent(value_change_max_len, value_change, plus=True)
-        value_change_sign, value_change_color = ('', 'red') if value_change.is_signed() else ('+', 'green')
+
+        if value_change.is_zero():
+            value_change_sign, value_change_color, value_change_bold = (
+                ' ', cli_colors.value_change_zero.fg, cli_colors.value_change_zero.bold
+            )
+        elif value_change.is_signed():
+            value_change_sign, value_change_color, value_change_bold = (
+                '', cli_colors.value_change_minus.fg, cli_colors.value_change_minus.bold
+            )
+        else:
+            value_change_sign, value_change_color, value_change_bold = (
+                '+', cli_colors.value_change_plus.fg, cli_colors.value_change_plus.bold
+            )
+
         value_change_h = human_value(value_change)
 
         vs = f' {value_change_indent}{value_change_sign}{value_change_h}% '
         value_len += len(vs)
-        s += click.style(vs, fg=value_change_color, bold=True)
+        s += click.style(vs, fg=value_change_color, bold=value_change_bold)
 
     return s, value_len
 
@@ -140,7 +156,7 @@ def print_currencies_info(currencies_info: list[CurrencyInfo]):
             zip(names, price_values, tvl_values, volume_24h_values, volume_7d_values):
 
         name_indent = value_indent(name_max_len, name)
-        name_s = click.style(f'{name_indent}{name} ', fg='cyan', bold=True)
+        name_s = click.style(f'{name_indent}{name} ', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
 
         price_s, price_sl = format_value(price_max_len, price, price_change_max_len, price_change)
         tvl_s, tvl_sl = format_value(tvl_max_len, tvl, tvl_change_max_len, tvl_change)
@@ -158,7 +174,7 @@ def print_currencies_info(currencies_info: list[CurrencyInfo]):
     header = click.style(
         f'{name_indent}{name_title} |{price_indent}{price_title} |{tvl_indent}{tvl_title} |'
         f'{vol_24h_indent}{vol_24h_title} |{vol_7d_indent}{vol_7d_title}\n',
-        fg='bright_black', bold=True)
+        fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
     s = header + s
     click.echo(s, nl=False)
@@ -167,6 +183,30 @@ def print_currencies_info(currencies_info: list[CurrencyInfo]):
 @cli.group()
 def currency():
     pass
+
+
+@currency.command(name='config')
+def config_():
+    """Show the current list of currencies in the config
+    """
+
+    names, addresses = zip(*config.currencies.items())
+    name_max_len = max(len(name) for name in names)
+    indents = [' ' * (name_max_len - len(name)) for name in names]
+
+    title_name = 'Name'
+    title_address = 'Address'
+
+    title_name_indent = ' ' * (name_max_len - len(title_name))
+    s = click.style(f'{title_name_indent}{title_name} | {title_address}\n',
+                    fg=cli_colors.table.fg, bold=cli_colors.table.bold)
+
+    for indent, name, address in zip(indents, names, addresses):
+        s += click.style(f'{indent}{name} ', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
+        s += click.style('| ', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
+        s += click.style(f'{address}\n', fg=cli_colors.value.fg, bold=cli_colors.value.bold)
+
+    click.echo(s, nl=False)
 
 
 @currency.command()

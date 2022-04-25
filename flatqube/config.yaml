@@ -1,0 +1,73 @@
+---
+
+api_urls:
+  swap_indexer: "https://ton-swap-indexer.broxus.com/v1"
+  farming_indexer: "https://farming-pool-indexer.broxus.com/v1"
+
+quantize:
+  decimal_digits:
+    1: 4
+    2: 3
+    3: 2
+    4: 1
+    5: 0
+
+cli_colors:
+  table:
+    fg: "bright_black"
+    bold: true
+
+  name:
+    fg: "cyan"
+    bold: true
+
+  value:
+    fg: "white"
+    bold: true
+
+  value_change_zero:
+    fg: "white"
+    bold: false
+
+  value_change_plus:
+    fg: "green"
+    bold: true
+
+  value_change_minus:
+    fg: "red"
+    bold: true
+
+# The list of all FlatQube currencies in the whitelist
+currencies:
+  # Everscale ecosystem
+  WEVER: "0:a49cd4e158a9a15555e624759e2e4e766d22600b7800d891e46f9291f044a93d"
+  BRIDGE: "0:f2679d80b682974e065e03bf42bbee285ce7c587eb153b41d761ebfd954c45e1"
+  QUBE: "0:9f20666ce123602fd7a995508aeaa0ece4f92133503c0dfbd609b3239f3901e2"
+  EVS: "0:e5d964bf76b90a29ca11ff03a0402eeca6a1c79a0fb4d8a2f06a67be0537a6bf"
+  LEND: "0:679a05316a324d0daa2724ab7d8e9768a2d1042863299323e969a174a8412a58"
+
+  # Wrapped coins from Ethereum and other networks
+  WETH: "0:59b6b64ac6798aacf385ae9910008a525a84fc6dcf9f942ae81f8e8485fe160d"
+  WBTC: "0:2ba32b75870d572e255809b7b423f30f36dd5dea075bd5f026863fceb81f2bcf"
+  DAF: "0:f48054939064d686a9ad68d96d9ab79e409b095557c06ab7f073097dade7057f"
+  FXS: "0:c14e2f026feaae0f99b92c04ee421051a782fff60156ac8a586a12f63d7facef"
+
+  # Stablecoins
+  USDT: "0:a519f99bb5d6d51ef958ed24d337ad75a1c770885dcd42d51d6663f9fcdacfb2"
+  USDC: "0:c37b3fafca5bf7d3704b081fde7df54f298736ee059bf6d32fac25f5e6085bf6"
+  DAI: "0:eb2ccad2020d9af9cec137d3146dde067039965c13a27d97293c931dae22b2b9"
+  EUPI: "0:0cfa60f9454b1b619938c4da6a138b1cc62da937b3f6c0506405daf2a88e0115"
+
+  # Memcoins
+  DUSA: "0:b3ed4b9402881c7638566b410dda055344679b065dce19807497c62202ba9ce3"
+  SOON: "0:a15e6a7a91c331ddcd85675ca64d5a7db8c7e94b35806b2e05bf4bce29d21023"
+  MOON: "0:b5ff077d8ac0160559bd3c945a2a824cda12ba93ae90c2697c890656d52fc7d0"
+  GRE: "0:fde4c629d6447fecd86d2cffe363d5f334030351022bad019e0f472212e9dc99"
+  BARBARA: "0:9e0350c13cafe2bb55d906553fde5f357612e6dcb46c0c3440c7bfdda273ffdd"
+  RUM: "0:38a4c196c7fe22cbf0cda034ddda284aa208e2dba7707b96f65914420ba3f580"
+  COLA: "0:9dd2cd82cbfd74a963be1ef1fd1a1f3e25f60e0b8c742f8b862df378b9a5e265"
+
+
+farming_pools:
+  QUBE/WEVER: "0:f96da52e928cf4d8e54dcec0e7f7fefddfb7592590f05705dcaa9f211102fbc5"
+  QUBE/BRIDGE: "0:4cc84ba606733383293bdde9469c0a84479f110f8029f79222893e2d2e5db335"

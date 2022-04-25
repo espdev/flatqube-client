@@ -1,17 +1,17 @@
 [tool.poetry]
 name = "flatqube-info"
 version = "0.1.0"
-description = "FlatQube info lib and CLI tool"
+description = "FlatQube API client library and CLI tool"
 authors = ["Evgeny Prilepin <esp.home@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
 packages = [
-    { include = "fqinfo" },
+    { include = "flatqube" },
 ]
 
 [tool.poetry.scripts]
-fqinfo = 'fqinfo.cli:cli'
+flatqube = 'flatqube.cli:cli'
 
 [tool.poetry.dependencies]
 python = "^3.9"
