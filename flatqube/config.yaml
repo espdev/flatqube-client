@@ -89,7 +89,7 @@ currency_lists:
     - "QUBE"
     - "BRIDGE"
 
-  wrapped:
+  wrap:
     - "WETH"
     - "WBTC"
 
