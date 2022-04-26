@@ -128,8 +128,12 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
             quantize_value(currency_info.volume_7d)
         )
 
-    sort_indicator = ' ▲' if sort_order == CurrencySortOrders.ascend else ' ▼'
-    change_sort_indicator = '%'
+    if len(currencies_info) > 1:
+        sort_indicator = ' ▲' if sort_order == CurrencySortOrders.ascend else ' ▼'
+        change_sort_indicator = '%'
+    else:
+        sort_indicator = ''
+        change_sort_indicator = ''
 
     if sort == CurrencySortOptions.price:
         price_sort_indicator = sort_indicator
