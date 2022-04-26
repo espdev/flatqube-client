@@ -99,7 +99,7 @@ currency_lists:
     - "DAI"
     - "EUPI"
 
-  memes:
+  meme:
     - "DUSA"
     - "SOON"
     - "MOON"
