@@ -303,9 +303,9 @@ sort_orders = tuple(item.value for item in CurrencySortOrders)  # noqa
 @currency.command()
 @click.argument('names', nargs=-1)
 @click.option('-l', '--list', 'currency_list', default=None, help="The list of tokens to show from the config")
-@click.option('-s', '--sort', type=click.Choice(sort_options), default=CurrencySortOptions.tvl.value,
+@click.option('-s', '--sort', type=click.Choice(sort_options), default=cli_cfg.currency.show.sort,
               show_default=True, help="Sort displayed currencies")
-@click.option('-o', '--sort-order', type=click.Choice(sort_orders), default=CurrencySortOrders.ascend.value,
+@click.option('-o', '--sort-order', type=click.Choice(sort_orders), default=cli_cfg.currency.show.sort_order,
               show_default=True, help='Sort order')
 @click.option('-u', '--update', is_flag=True, default=False, show_default=True, help='Auto update data')
 @click.option('-i', '--update-interval', type=float, default=cli_cfg.currency.show.update_interval, show_default=True,

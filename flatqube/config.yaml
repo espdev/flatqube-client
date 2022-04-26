@@ -45,6 +45,8 @@ cli:
   currency:
     show:
       default_list: "everscale"
+      sort: "tvl"
+      sort_order: "descend"
       update_interval: 5.0  # seconds
 
 
