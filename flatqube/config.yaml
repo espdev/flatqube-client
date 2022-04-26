@@ -88,6 +88,12 @@ currency_lists:
     - "WEVER"
     - "QUBE"
     - "BRIDGE"
+    - "EVS"
+    - "LEND"
+
+  broxus:
+    - "BRIDGE"
+    - "QUBE"
 
   wrap:
     - "WETH"
