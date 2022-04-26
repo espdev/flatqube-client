@@ -70,7 +70,7 @@ def format_value(value_max_len: int, value: Decimal,
     v_indent = value_indent(value_max_len, value)
     value_h = human_value(value)
 
-    s = click.style(f'|', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
+    s = click.style(f'│', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
     vs = f' {v_indent}${value_h} '
     value_len = len(vs)
@@ -192,8 +192,8 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
     vol_7d_indent = value_indent(vol_7d_sl - 1, vol_7d_title)
 
     header = click.style(
-        f'{name_indent}{name_title} |{price_indent}{price_title} |{tvl_indent}{tvl_title} |'
-        f'{vol_24h_indent}{vol_24h_title} |{vol_7d_indent}{vol_7d_title}\n',
+        f'{name_indent}{name_title} │{price_indent}{price_title} │{tvl_indent}{tvl_title} │'
+        f'{vol_24h_indent}{vol_24h_title} │{vol_7d_indent}{vol_7d_title}\n',
         fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
     s = header + s
@@ -285,12 +285,12 @@ def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str], 
     title_address = 'Address'
 
     title_name_indent = ' ' * (name_max_len - len(title_name))
-    s = click.style(f'{title_name_indent}{title_name} | {title_address}\n',
+    s = click.style(f'{title_name_indent}{title_name} │ {title_address}\n',
                     fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
     for indent, name, address in zip(indents, names, addresses):
         s += click.style(f'{indent}{name} ', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
-        s += click.style('| ', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
+        s += click.style('│ ', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
         s += click.style(f'{address}\n', fg=cli_colors.value.fg, bold=cli_colors.value.bold)
 
     click.echo(s, nl=False)
