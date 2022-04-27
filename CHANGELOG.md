@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.7 (27.04.2022)
+
+- Add optional show 24h transaction count (option `-t/--show-trans-count` in `currency show` command)
+
 ## v0.1.6 (27.04.2022)
 
 - Fix formatting currencies
