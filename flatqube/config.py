@@ -175,6 +175,6 @@ def add_currency_to_config(name: str, address: str):
         'currencies': {}
     })
 
-    cfg.currencies[name] = address
+    cfg.currencies[name.upper()] = address
 
     _save_user_config(cfg)
