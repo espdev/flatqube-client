@@ -123,7 +123,7 @@ class FlatQubeClient:
 
         name_indices = {name: index for name, index in zip(names, count())}
 
-        def _sort_currencies_key(currency: CurrencyInfo):
+        def _sort_currencies(currency: CurrencyInfo):
             if sort == CurrencySortOptions.none:
                 return name_indices[currency.name]
             elif sort == CurrencySortOptions.price:
@@ -142,6 +142,6 @@ class FlatQubeClient:
                 return currency.volume_7d
 
         reverse = True if sort_order == CurrencySortOrders.descend else False
-        currencies.sort(key=_sort_currencies_key, reverse=reverse)
+        currencies.sort(key=_sort_currencies, reverse=reverse)
 
         return currencies
