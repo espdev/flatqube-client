@@ -9,7 +9,7 @@ flatqube-client is an API client library and CLI tools for [FlatQube](https://ap
 ## Installing
 
 ```
-pip install -U flatqube-client
+pip3 install -U flatqube-client
 ```
 
 ## Usage
