@@ -48,6 +48,8 @@ Or we can show meme tokens sorted by price change:
 flatqube currency show -l meme -s price-ch
 ```
 
+![2022-04-27_20-58-13](https://user-images.githubusercontent.com/1299189/165589946-e9d1c943-ee13-4689-bf94-c45476674b8c.png)
+
 Also, we can run cli in "auto-update" mode. By default update interval is 5 seconds:
 
 ```
