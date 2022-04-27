@@ -5,9 +5,10 @@ from enum import Enum
 from itertools import count
 
 import requests
+from pydantic import ValidationError
 
 from .config import config
-from .models import CurrencyInfo
+from .models import CurrencyInfo, FarmingPoolInfo
 
 
 class FlatQubeClientError(Exception):
@@ -106,9 +107,12 @@ class FlatQubeClient:
         info = self._request(self.session.post, api_url, data=data)
         currencies_info = info.get('currencies', [])
 
-        currencies = [
-            CurrencyInfo.parse_obj(currency_info) for currency_info in currencies_info
-        ]
+        try:
+            currencies = [
+                CurrencyInfo.parse_obj(currency_info) for currency_info in currencies_info
+            ]
+        except ValidationError as err:
+            raise FlatQubeClientError(f'Cannot parse currency info\n{err}') from err
 
         name_indices = {name: index for name, index in zip(names, count())}
 
@@ -134,6 +138,27 @@ class FlatQubeClient:
         currencies.sort(key=_sort_currencies, reverse=reverse)
 
         return currencies
+
+    def farmin_pool(self,
+                    pool_address: str,
+                    user_address: Optional[str] = None,
+                    after_zero_balance: bool = True) -> FarmingPoolInfo:
+        """Get info about farming pool
+        """
+
+        api_url = f'{self._farming_api_url}/farming_pools/{pool_address}'
+
+        data = {
+            'afterZeroBalance': after_zero_balance,
+            'userAddress': user_address,
+        }
+
+        farming_pool_info = self._request(self.session.post, api_url, data=data)
+
+        try:
+            return FarmingPoolInfo.parse_obj(farming_pool_info)
+        except ValidationError as err:
+            raise FlatQubeClientError(f'Cannot parse farming pool info\n{err}') from err
 
     @staticmethod
     def _request(method, api_url, data=None):
