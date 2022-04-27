@@ -8,9 +8,12 @@ import sys
 import click
 
 from .config import config, add_currency_to_config
+from .constants import CLI_NAME
 from .client import FlatQubeClient, CurrencySortOptions, CurrencySortOrders
 from .models import CurrencyInfo
 from .utils import quantize_value, humanize_value, len_decimal, max_lens, value_indent
+from .version import __version__
+
 
 cli_cfg = config.cli
 cli_colors = config.cli_colors
@@ -177,7 +180,8 @@ def fail(ctx: click.Context, message: str, err: Optional[Exception] = None):
     ctx.fail(styled_message)
 
 
-@click.group()
+@click.group(name=CLI_NAME)
+@click.version_option(version=__version__, prog_name=CLI_NAME)
 @click.pass_context
 def cli(ctx: click.Context):
     """FlatQube client CLI tool

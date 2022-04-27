@@ -6,8 +6,9 @@ from pathlib import Path
 import appdirs
 from omegaconf import DictConfig, OmegaConf
 
+from .constants import APP_NAME
 
-APP_NAME = 'flatqube-info'
+
 ROOT_PATH = Path(__file__).parent
 DEFAULT_CONFIG_PATH = ROOT_PATH / 'config.yaml'
 USER_CONFIG_PATH = Path(appdirs.user_config_dir(APP_NAME)) / 'config.yaml'
