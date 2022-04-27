@@ -55,7 +55,7 @@ def format_value(title: str,
 
     title_len = len(title)
 
-    if value_len < title_len:
+    if value_len <= title_len:
         indent_sz = title_len - value_len + 1
         s = ' ' * indent_sz + s
         value_len += indent_sz
