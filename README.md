@@ -34,7 +34,15 @@ Show the default list (`everscale`) of currencies:
 flatqube currency show
 ```
 
-Also, we can show some list, "meme" for example:
+Also, we can show some list, "star" for example:
+
+```
+flatqube currency show -l star
+```
+
+![2022-04-27_20-34-34](https://user-images.githubusercontent.com/1299189/165585978-08d49363-7f0f-408b-ba33-e55cae3c630d.png)
+
+Or we can show meme tokens sorted by price change:
 
 ```
 flatqube currency show -l meme -s price-ch
