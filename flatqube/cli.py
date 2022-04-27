@@ -293,7 +293,9 @@ def show(ctx: click.Context, names: list[str],
     if not names and not currency_list:
         names = config.currency_lists[cli_cfg.currency.show.default_list]
     elif not names and currency_list:
-        names = config.currency_lists[currency_list.lower()]
+        if currency_list not in config.currency_lists:
+            fail(ctx, f"'{currency_list}' currency list does not exist in the config.")
+        names = config.currency_lists[currency_list]
     elif names and currency_list:
         fail(ctx, "'-l/--list' option is not allowed if NAMES were set.")
 
