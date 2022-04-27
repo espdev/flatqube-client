@@ -188,7 +188,7 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
         s += f' {name_s}{price_s}{tvl_s}{vol_24h_s}{vol_7d_s}{trans_24h_s}\n'
 
     if show_trans_count:
-        trans_count_s = f' |{trans_24h_title:>{trans_24h_sl}}'
+        trans_count_s = f' │{trans_24h_title:>{trans_24h_sl}}'
     else:
         trans_count_s = ''
 
