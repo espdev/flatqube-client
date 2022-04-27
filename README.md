@@ -1,3 +1,3 @@
-# FlatQube Info
+# flatqube-client
 
-FlatQube info lib and CLI tool
+flatqube-client is an API client library and CLI tools for [FlatQube](https://app.flatqube.io) DEX service in [Everscale](https://everscale.network) blockhain network.
