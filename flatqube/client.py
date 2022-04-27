@@ -75,7 +75,8 @@ class FlatQubeClient:
         currency_address = config.currencies.get(name.upper())
 
         if not currency_address:
-            raise FlatQubeClientError(f"'{name}' currency address is unknown. The currency does not exist in the config.")
+            raise FlatQubeClientError(
+                f"'{name}' currency address is unknown. The currency does not exist in the config.")
 
         return self.currency_by_address(address=currency_address)
 
