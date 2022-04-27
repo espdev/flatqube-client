@@ -11,7 +11,7 @@ from .config import config, add_currency_to_config
 from .constants import CLI_NAME
 from .client import FlatQubeClient, CurrencySortOptions, CurrencySortOrders
 from .models import CurrencyInfo
-from .utils import quantize_value, humanize_value, len_decimal, max_lens, value_indent
+from .utils import quantize_value, humanize_value, len_decimal
 from .version import __version__
 
 
@@ -22,20 +22,18 @@ sort_options = tuple(item.value for item in CurrencySortOptions)  # noqa
 sort_orders = tuple(item.value for item in CurrencySortOrders)  # noqa
 
 
-def format_value(value_max_len: int, value: Decimal,
-                 value_change_max_len: Optional[int] = None, value_change: Optional[Decimal] = None) -> tuple[str, int]:
-    v_indent = value_indent(value_max_len, value)
-    value_h = humanize_value(value)
+def format_value(title: str,
+                 value_max_len: int, value: Decimal,
+                 value_change_max_len: Optional[int] = None,
+                 value_change: Optional[Decimal] = None) -> tuple[str, int]:
 
-    s = click.style(f'│', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
-
-    vs = f' {v_indent}${value_h} '
+    value_h = f'${humanize_value(value)}'
+    vs = f' {value_h:>{value_max_len+1}} '
     value_len = len(vs)
-    s += click.style(vs, fg=cli_colors.value.fg, bold=cli_colors.value.bold)
+
+    s = click.style(vs, fg=cli_colors.value.fg, bold=cli_colors.value.bold)
 
     if value_change_max_len is not None and value_change is not None:
-        value_change_indent = value_indent(value_change_max_len, value_change, plus=True)
-
         if value_change.is_zero():
             value_change_sign, value_change_color, value_change_bold = (
                 ' ', cli_colors.value_change_zero.fg, cli_colors.value_change_zero.bold
@@ -49,13 +47,22 @@ def format_value(value_max_len: int, value: Decimal,
                 '+', cli_colors.value_change_plus.fg, cli_colors.value_change_plus.bold
             )
 
-        value_change_h = humanize_value(value_change)
-
-        vs = f' {value_change_indent}{value_change_sign}{value_change_h}% '
+        value_change_h = f'{value_change_sign}{humanize_value(value_change)}'
+        vs = f' {value_change_h:>{value_change_max_len}}% '
         value_len += len(vs)
+
         s += click.style(vs, fg=value_change_color, bold=value_change_bold)
 
-    return s, value_len
+    title_len = len(title)
+
+    if value_len < title_len:
+        indent_sz = title_len - value_len + 1
+        s = ' ' * indent_sz + s
+        value_len += indent_sz
+
+    s = click.style(f'│', fg=cli_colors.table.fg, bold=cli_colors.table.bold) + s
+
+    return s, value_len - 1
 
 
 def print_currencies_info(currencies_info: list[CurrencyInfo],
@@ -65,6 +72,11 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
         return quantize_value(value_change,
                               decimal_digits=config.quantize.value_change_decimal_digits,
                               normalize=config.quantize.value_change_normalize)
+
+    def max_lens(values: list[tuple[Decimal, Decimal]]) -> tuple[int, int]:
+        value_max_len = max(len_decimal(value) for value, _ in values)
+        value_change_max_len = max(len_decimal(value_change, plus=True) for _, value_change in values)
+        return value_max_len, value_change_max_len
 
     names = []
     price_values = []
@@ -125,16 +137,16 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
     volume_7d_sort_indicator = sort_indicator if sort == CurrencySortOptions.volume7d else ''
 
     name_title = 'Name'
-    price_title = 'Price' + price_sort_indicator
-    tvl_title = 'TVL' + tvl_sort_indicator
-    vol_24h_title = '24h Volume' + volume_24h_sort_indicator
-    vol_7d_title = '7d Volume' + volume_7d_sort_indicator
+    price_title = ' Price' + price_sort_indicator
+    tvl_title = ' TVL' + tvl_sort_indicator
+    vol_24h_title = ' 24h Volume' + volume_24h_sort_indicator
+    vol_7d_title = ' 7d Volume' + volume_7d_sort_indicator
 
     name_max_len = max(len(name) for name in names + [name_title])
     price_max_len, price_change_max_len = max_lens(price_values)
     tvl_max_len, tvl_change_max_len = max_lens(tvl_values)
     vol_24h_max_len, vol_24h_change_max_len = max_lens(volume_24h_values)
-    vol_7d_max_len = max(max(len_decimal(volume_7d) for volume_7d in volume_7d_values), len(vol_7d_title) - 1)
+    vol_7d_max_len = max(len_decimal(volume_7d) for volume_7d in volume_7d_values)
 
     s = ''
     price_sl = 0
@@ -145,25 +157,19 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
     for name, (price, price_change), (tvl, tvl_change), (vol_24h, vol_24h_change), vol_7d in \
             zip(names, price_values, tvl_values, volume_24h_values, volume_7d_values):
 
-        name_indent = value_indent(name_max_len, name)
-        name_s = click.style(f'{name_indent}{name} ', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
+        name_s = click.style(f'{name:>{name_max_len}} ', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
 
-        price_s, price_sl = format_value(price_max_len, price, price_change_max_len, price_change)
-        tvl_s, tvl_sl = format_value(tvl_max_len, tvl, tvl_change_max_len, tvl_change)
-        vol_24h_s, vol_24h_sl = format_value(vol_24h_max_len, vol_24h, vol_24h_change_max_len, vol_24h_change)
-        vol_7d_s, vol_7d_sl = format_value(vol_7d_max_len, vol_7d)
+        price_s, price_sl = format_value(price_title, price_max_len, price, price_change_max_len, price_change)
+        tvl_s, tvl_sl = format_value(tvl_title, tvl_max_len, tvl, tvl_change_max_len, tvl_change)
+        vol_24h_s, vol_24h_sl = format_value(
+            vol_24h_title, vol_24h_max_len, vol_24h, vol_24h_change_max_len, vol_24h_change)
+        vol_7d_s, vol_7d_sl = format_value(vol_7d_title, vol_7d_max_len, vol_7d)
 
-        s += f'{name_s}{price_s}{tvl_s}{vol_24h_s}{vol_7d_s}\n'
-
-    name_indent = value_indent(name_max_len, name_title)
-    price_indent = value_indent(price_sl - 1, price_title)
-    tvl_indent = value_indent(tvl_sl - 1, tvl_title)
-    vol_24h_indent = value_indent(vol_24h_sl - 1, vol_24h_title)
-    vol_7d_indent = value_indent(vol_7d_sl - 1, vol_7d_title)
+        s += f' {name_s}{price_s}{tvl_s}{vol_24h_s}{vol_7d_s}\n'
 
     header = click.style(
-        f'{name_indent}{name_title} │{price_indent}{price_title} │{tvl_indent}{tvl_title} │'
-        f'{vol_24h_indent}{vol_24h_title} │{vol_7d_indent}{vol_7d_title}\n',
+        f' {name_title:>{name_max_len}} │{price_title:>{price_sl}} │{tvl_title:>{tvl_sl}} │'
+        f'{vol_24h_title:>{vol_24h_sl}} │{vol_7d_title:>{vol_7d_sl}}\n',
         fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
     s = header + s
@@ -219,19 +225,17 @@ def show_currencies(ctx: click.Context, currency_list: str):
     else:
         currencies = config.currencies
 
-    names, addresses = zip(*currencies.items())
-    name_max_len = max(len(name) for name in names)
-    indents = [' ' * (name_max_len - len(name)) for name in names]
-
     title_name = 'Name'
     title_address = 'Address'
 
-    title_name_indent = ' ' * (name_max_len - len(title_name))
-    s = click.style(f'{title_name_indent}{title_name} │ {title_address}\n',
+    names, addresses = zip(*currencies.items())
+    name_max_len = max(len(name) for name in names + [title_name])
+
+    s = click.style(f'{title_name:>{name_max_len}} │ {title_address}\n',
                     fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
-    for indent, name, address in zip(indents, names, addresses):
-        s += click.style(f'{indent}{name} ', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
+    for name, address in zip(names, addresses):
+        s += click.style(f'{name:>{name_max_len}} ', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
         s += click.style('│ ', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
         s += click.style(f'{address}\n', fg=cli_colors.value.fg, bold=cli_colors.value.bold)
 

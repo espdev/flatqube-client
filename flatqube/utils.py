@@ -32,18 +32,3 @@ def len_decimal(value: Decimal, plus: bool = False) -> int:
     if plus and not value.is_signed():
         value_len += 1
     return value_len
-
-
-def max_lens(values: list[tuple[Decimal, Decimal]]) -> tuple[int, int]:
-    value_max_len = max(len_decimal(value) for value, _ in values)
-    value_change_max_len = max(len_decimal(value_change, plus=True) for _, value_change in values)
-    return value_max_len, value_change_max_len
-
-
-def value_indent(value_max_len: int, value: Union[str, Decimal], plus: bool = False) -> str:
-    if isinstance(value, str):
-        value_len = len(value)
-    else:
-        value_len = len_decimal(value, plus=plus)
-
-    return ' ' * (value_max_len - value_len)
