@@ -6,6 +6,7 @@ import time
 import sys
 
 import click
+from omegaconf import DictConfig
 
 from .config import config, add_currency_to_config, config_paths
 from .constants import CLI_NAME
@@ -25,13 +26,15 @@ sort_orders = tuple(item.value for item in CurrencySortOrders)  # noqa
 def format_value(title: str,
                  value_max_len: int, value: Decimal,
                  value_change_max_len: Optional[int] = None,
-                 value_change: Optional[Decimal] = None) -> tuple[str, int]:
+                 value_change: Optional[Decimal] = None,
+                 prefix: str = '$',
+                 color_config: DictConfig = cli_colors.value) -> tuple[str, int]:
 
-    value_h = f'${humanize_value(value)}'
-    vs = f' {value_h:>{value_max_len+1}} '
+    value_h = f'{prefix}{humanize_value(value)}'
+    vs = f' {value_h:>{value_max_len+len(prefix)}} '
     value_len = len(vs)
 
-    s = click.style(vs, fg=cli_colors.value.fg, bold=cli_colors.value.bold)
+    s = click.style(vs, fg=color_config.fg, bold=color_config.bold)
 
     if value_change_max_len is not None and value_change is not None:
         if value_change.is_zero():
@@ -66,7 +69,9 @@ def format_value(title: str,
 
 
 def print_currencies_info(currencies_info: list[CurrencyInfo],
-                          sort: CurrencySortOptions, sort_order: CurrencySortOrders):
+                          sort: CurrencySortOptions,
+                          sort_order: CurrencySortOrders,
+                          show_trans_count: bool):
 
     def quantize_value_change(value_change: Decimal) -> Decimal:
         return quantize_value(value_change,
@@ -83,6 +88,7 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
     tvl_values = []
     volume_24h_values = []
     volume_7d_values = []
+    trans_24h_values = []
 
     for currency_info in currencies_info:
         names.append(currency_info.name)
@@ -104,6 +110,10 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
 
         volume_7d_values.append(
             quantize_value(currency_info.volume_7d),
+        )
+
+        trans_24h_values.append(
+            quantize_value(Decimal(currency_info.transaction_count_24h), decimal_digits=0),
         )
 
     if len(currencies_info) > 1:
@@ -135,27 +145,31 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
         volume_24h_sort_indicator = ''
 
     volume_7d_sort_indicator = sort_indicator if sort == CurrencySortOptions.volume7d else ''
+    trans_24h_sort_indicator = sort_indicator if sort == CurrencySortOptions.trans24h else ''
 
     name_title = 'Name'
     price_title = ' Price' + price_sort_indicator
     tvl_title = ' TVL' + tvl_sort_indicator
     vol_24h_title = ' 24h Volume' + volume_24h_sort_indicator
     vol_7d_title = ' 7d Volume' + volume_7d_sort_indicator
+    trans_24h_title = ' 24h Tr-s' + trans_24h_sort_indicator
 
     name_max_len = max(len(name) for name in names + [name_title])
     price_max_len, price_change_max_len = max_lens(price_values)
     tvl_max_len, tvl_change_max_len = max_lens(tvl_values)
     vol_24h_max_len, vol_24h_change_max_len = max_lens(volume_24h_values)
     vol_7d_max_len = max(len_decimal(volume_7d) for volume_7d in volume_7d_values)
+    trans_24h_max_len = max(len_decimal(trans_24h) for trans_24h in trans_24h_values)
 
     s = ''
     price_sl = 0
     tvl_sl = 0
     vol_24h_sl = 0
     vol_7d_sl = 0
+    trans_24h_sl = 0
 
-    for name, (price, price_change), (tvl, tvl_change), (vol_24h, vol_24h_change), vol_7d in \
-            zip(names, price_values, tvl_values, volume_24h_values, volume_7d_values):
+    for name, (price, price_change), (tvl, tvl_change), (vol_24h, vol_24h_change), vol_7d, trans_24h in \
+            zip(names, price_values, tvl_values, volume_24h_values, volume_7d_values, trans_24h_values):
 
         name_s = click.style(f'{name:>{name_max_len}} ', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
 
@@ -165,11 +179,22 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
             vol_24h_title, vol_24h_max_len, vol_24h, vol_24h_change_max_len, vol_24h_change)
         vol_7d_s, vol_7d_sl = format_value(vol_7d_title, vol_7d_max_len, vol_7d)
 
-        s += f' {name_s}{price_s}{tvl_s}{vol_24h_s}{vol_7d_s}\n'
+        if show_trans_count:
+            trans_24h_s, trans_24h_sl = format_value(trans_24h_title, trans_24h_max_len, trans_24h, prefix='')
+        else:
+            trans_24h_s = ''
+            trans_24h_sl = 0
+
+        s += f' {name_s}{price_s}{tvl_s}{vol_24h_s}{vol_7d_s}{trans_24h_s}\n'
+
+    if show_trans_count:
+        trans_count_s = f' |{trans_24h_title:>{trans_24h_sl}}'
+    else:
+        trans_count_s = ''
 
     header = click.style(
         f' {name_title:>{name_max_len}} │{price_title:>{price_sl}} │{tvl_title:>{tvl_sl}} │'
-        f'{vol_24h_title:>{vol_24h_sl}} │{vol_7d_title:>{vol_7d_sl}}\n',
+        f'{vol_24h_title:>{vol_24h_sl}} │{vol_7d_title:>{vol_7d_sl}}{trans_count_s}\n',
         fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
     s = header + s
@@ -302,6 +327,7 @@ def add_currency(ctx: click.Context, address: str):
               show_default=True, help="Sort displayed currencies")
 @click.option('-o', '--sort-order', type=click.Choice(sort_orders), default=cli_cfg.currency.show.sort_order,
               show_default=True, help='Sort order')
+@click.option('-t', '--show-trans-count', is_flag=True, default=False, help='Show 24h transaction count')
 @click.option('-u', '--update', is_flag=True, default=False, show_default=True, help='Auto update data')
 @click.option('-i', '--update-interval', type=float, default=cli_cfg.currency.show.update_interval, show_default=True,
               help='Auto update interval in seconds')
@@ -309,6 +335,7 @@ def add_currency(ctx: click.Context, address: str):
 def show(ctx: click.Context, names: list[str],
          currency_list: Optional[str],
          sort: str, sort_order: str,
+         show_trans_count: bool,
          update: bool, update_interval: float):
     """Show currencies info
     """
@@ -347,7 +374,7 @@ def show(ctx: click.Context, names: list[str],
             warn(message)
             return
 
-        print_currencies_info(currencies_info, sort, sort_order)
+        print_currencies_info(currencies_info, sort, sort_order, show_trans_count)
 
         if not update:
             break

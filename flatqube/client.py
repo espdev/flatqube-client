@@ -24,6 +24,7 @@ class CurrencySortOptions(str, Enum):
     volume24h = 'vol24h'
     volume24h_change = 'vol24h-ch'
     volume7d = 'vol7d'
+    trans24h = 'trans24h'
 
 
 class CurrencySortOrders(str, Enum):
@@ -133,6 +134,8 @@ class FlatQubeClient:
                 return currency.volume_change_24h
             elif sort == CurrencySortOptions.volume7d:
                 return currency.volume_7d
+            elif sort == CurrencySortOptions.trans24h:
+                return currency.transaction_count_24h
 
         reverse = True if sort_order == CurrencySortOrders.descend else False
         currencies.sort(key=_sort_currencies, reverse=reverse)
