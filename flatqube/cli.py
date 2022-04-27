@@ -129,7 +129,7 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
         )
 
     if len(currencies_info) > 1:
-        sort_indicator = ' ▲' if sort_order == CurrencySortOrders.ascend else ' ▼'
+        sort_indicator = ' ▴' if sort_order == CurrencySortOrders.ascend else ' ▾'
         change_sort_indicator = '%'
     else:
         sort_indicator = ''
