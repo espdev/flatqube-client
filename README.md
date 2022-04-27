@@ -22,7 +22,13 @@ flatqube --help
 
 ### Show Currency Info
 
-Show the default list of currencies:
+Show selected currencies:
+
+```
+flatqube currency show wever qube bridge
+```
+
+Show the default list (`everscale`) of currencies:
 
 ```
 flatqube currency show
@@ -32,6 +38,12 @@ Also, we can show some list, "meme" for example:
 
 ```
 flatqube currency show -l meme -s price-ch
+```
+
+Also, we can run cli in "auto-update" mode. By default update interval is 5 seconds:
+
+```
+flatqube currency show -l all -s price-ch -u -i3
 ```
 
 See help for more info about `currency show` command:
