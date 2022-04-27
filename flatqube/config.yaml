@@ -52,6 +52,9 @@ cli_colors:
     fg: "red"
     bold: true
 
+cli_table:
+  border_char: '│'
+
 cli:
   currency:
     show:

@@ -18,6 +18,7 @@ from .version import __version__
 
 cli_cfg = config.cli
 cli_colors = config.cli_colors
+tb_ch = config.cli_table.border_char
 
 sort_options = tuple(item.value for item in CurrencySortOptions)  # noqa
 sort_orders = tuple(item.value for item in CurrencySortOrders)  # noqa
@@ -63,7 +64,7 @@ def format_value(title: str,
         s = ' ' * indent_sz + s
         value_len += indent_sz
 
-    s = click.style(f'│', fg=cli_colors.table.fg, bold=cli_colors.table.bold) + s
+    s = click.style(tb_ch, fg=cli_colors.table.fg, bold=cli_colors.table.bold) + s
 
     return s, value_len - 1
 
@@ -188,13 +189,13 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
         s += f' {name_s}{price_s}{tvl_s}{vol_24h_s}{vol_7d_s}{trans_24h_s}\n'
 
     if show_trans_count:
-        trans_count_s = f' │{trans_24h_title:>{trans_24h_sl}}'
+        trans_count_s = f' {tb_ch}{trans_24h_title:>{trans_24h_sl}}'
     else:
         trans_count_s = ''
 
     header = click.style(
-        f' {name_title:>{name_max_len}} │{price_title:>{price_sl}} │{tvl_title:>{tvl_sl}} │'
-        f'{vol_24h_title:>{vol_24h_sl}} │{vol_7d_title:>{vol_7d_sl}}{trans_count_s}\n',
+        f' {name_title:>{name_max_len}} {tb_ch}{price_title:>{price_sl}} {tb_ch}{tvl_title:>{tvl_sl}} {tb_ch}'
+        f'{vol_24h_title:>{vol_24h_sl}} {tb_ch}{vol_7d_title:>{vol_7d_sl}}{trans_count_s}\n',
         fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
     s = header + s
@@ -274,12 +275,12 @@ def show_currencies(ctx: click.Context, currency_list: str):
 
     name_max_len = max(len(name) for name in names + (title_name,))
 
-    s = click.style(f' {title_name:>{name_max_len}} │ {title_address}\n',
+    s = click.style(f' {title_name:>{name_max_len}} {tb_ch} {title_address}\n',
                     fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
     for name, address in zip(names, addresses):
         s += click.style(f' {name:>{name_max_len}} ', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
-        s += click.style('│ ', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
+        s += click.style(f'{tb_ch} ', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
         s += click.style(f'{address}\n', fg=cli_colors.value.fg, bold=cli_colors.value.bold)
 
     click.echo(s, nl=False)
