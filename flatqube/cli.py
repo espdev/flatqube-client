@@ -229,7 +229,7 @@ def show_currencies(ctx: click.Context, currency_list: str):
     title_address = 'Address'
 
     names, addresses = zip(*currencies.items())
-    name_max_len = max(len(name) for name in names + [title_name])
+    name_max_len = max(len(name) for name in names + (title_name,))
 
     s = click.style(f'{title_name:>{name_max_len}} │ {title_address}\n',
                     fg=cli_colors.table.fg, bold=cli_colors.table.bold)
