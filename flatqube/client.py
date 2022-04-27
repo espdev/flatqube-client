@@ -58,14 +58,8 @@ class FlatQubeClient:
         """
 
         api_url = f'{self._swap_api_url}/currencies/{address}'
+        currency_info = self._request(self.session.post, api_url)
 
-        try:
-            with self.session.post(api_url) as resp:
-                resp.raise_for_status()
-        except Exception as err:
-            raise FlatQubeClientError(f'{err}') from err
-
-        currency_info = resp.json()
         return CurrencyInfo.parse_obj(currency_info)
 
     def currency(self, name: str) -> CurrencyInfo:
@@ -109,13 +103,8 @@ class FlatQubeClient:
             'ordering': 'tvlascending',
         }
 
-        try:
-            with self.session.post(api_url, json=data) as resp:
-                resp.raise_for_status()
-        except Exception as err:
-            raise FlatQubeClientError(f'{err}') from err
-
-        currencies_info = resp.json().get('currencies', [])
+        info = self._request(self.session.post, api_url, data=data)
+        currencies_info = info.get('currencies', [])
 
         currencies = [
             CurrencyInfo.parse_obj(currency_info) for currency_info in currencies_info
@@ -145,3 +134,12 @@ class FlatQubeClient:
         currencies.sort(key=_sort_currencies, reverse=reverse)
 
         return currencies
+
+    @staticmethod
+    def _request(method, api_url, data=None):
+        try:
+            with method(api_url, json=data) as resp:
+                resp.raise_for_status()
+                return resp.json()
+        except Exception as err:
+            raise FlatQubeClientError(f'{err}') from err
