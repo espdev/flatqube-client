@@ -1,74 +1,28 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, Union
+from typing import Optional
 from decimal import Decimal
 import time
 import sys
 
 import click
-from click_option_group import optgroup, MutuallyExclusiveOptionGroup
-import humanize
 
-from .config import config, add_currency
+from .config import config, add_currency_to_config
 from .client import FlatQubeClient, CurrencySortOptions, CurrencySortOrders
 from .models import CurrencyInfo
-
+from .utils import quantize_value, humanize_value, len_decimal, max_lens, value_indent
 
 cli_cfg = config.cli
 cli_colors = config.cli_colors
 
-
-def quantize_value(value: Decimal, decimal_digits: Optional[int] = None, normalize: bool = True) -> Decimal:
-    if not decimal_digits:
-        value_int = value.to_integral_value()
-        num_int_digits = len(value_int.as_tuple().digits)
-        decimal_digits = config.quantize.decimal_digits.get(num_int_digits, 0)
-
-    exponent = Decimal('1.{}'.format('0' * decimal_digits))
-    value = value.quantize(exponent)
-
-    if normalize:
-        value = value.normalize()
-
-    return value
-
-
-def human_value(value: Decimal) -> str:
-    return humanize.intcomma(f'{value:f}')
-
-
-def len_decimal(value: Decimal, plus: bool = False) -> int:
-    value_len = len(human_value(value))
-    if plus and not value.is_signed():
-        value_len += 1
-    return value_len
-
-
-def quantize_value_change(value: Decimal, value_change: Decimal) -> tuple[Decimal, Decimal]:
-    value_q = quantize_value(value)
-    value_change_q = quantize_value(value_change, decimal_digits=2, normalize=False)
-    return value_q, value_change_q
-
-
-def max_lens(values: list[tuple[Decimal, Decimal]]) -> tuple[int, int]:
-    value_max_len = max(len_decimal(value) for value, _ in values)
-    value_change_max_len = max(len_decimal(value_change, plus=True) for _, value_change in values)
-    return value_max_len, value_change_max_len
-
-
-def value_indent(value_max_len: int, value: Union[str, Decimal], plus: bool = False) -> str:
-    if isinstance(value, str):
-        value_len = len(value)
-    else:
-        value_len = len_decimal(value, plus=plus)
-
-    return ' ' * (value_max_len - value_len)
+sort_options = tuple(item.value for item in CurrencySortOptions)  # noqa
+sort_orders = tuple(item.value for item in CurrencySortOrders)  # noqa
 
 
 def format_value(value_max_len: int, value: Decimal,
                  value_change_max_len: Optional[int] = None, value_change: Optional[Decimal] = None) -> tuple[str, int]:
     v_indent = value_indent(value_max_len, value)
-    value_h = human_value(value)
+    value_h = humanize_value(value)
 
     s = click.style(f'│', fg=cli_colors.table.fg, bold=cli_colors.table.bold)
 
@@ -92,7 +46,7 @@ def format_value(value_max_len: int, value: Decimal,
                 '+', cli_colors.value_change_plus.fg, cli_colors.value_change_plus.bold
             )
 
-        value_change_h = human_value(value_change)
+        value_change_h = humanize_value(value_change)
 
         vs = f' {value_change_indent}{value_change_sign}{value_change_h}% '
         value_len += len(vs)
@@ -103,6 +57,12 @@ def format_value(value_max_len: int, value: Decimal,
 
 def print_currencies_info(currencies_info: list[CurrencyInfo],
                           sort: CurrencySortOptions, sort_order: CurrencySortOrders):
+
+    def quantize_value_change(value_change: Decimal) -> Decimal:
+        return quantize_value(value_change,
+                              decimal_digits=config.quantize.value_change_decimal_digits,
+                              normalize=config.quantize.value_change_normalize)
+
     names = []
     price_values = []
     tvl_values = []
@@ -112,20 +72,23 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
     for currency_info in currencies_info:
         names.append(currency_info.name)
 
-        price_values.append(
-            quantize_value_change(currency_info.price, currency_info.price_change)
-        )
+        price_values.append((
+            quantize_value(currency_info.price),
+            quantize_value_change(currency_info.price_change),
+        ))
 
-        tvl_values.append(
-            quantize_value_change(currency_info.tvl, currency_info.tvl_change)
-        )
+        tvl_values.append((
+            quantize_value(currency_info.tvl),
+            quantize_value_change(currency_info.tvl_change),
+        ))
 
-        volume_24h_values.append(
-            quantize_value_change(currency_info.volume_24h, currency_info.volume_change_24h)
-        )
+        volume_24h_values.append((
+            quantize_value(currency_info.volume_24h),
+            quantize_value_change(currency_info.volume_change_24h),
+        ))
 
         volume_7d_values.append(
-            quantize_value(currency_info.volume_7d)
+            quantize_value(currency_info.volume_7d),
         )
 
     if len(currencies_info) > 1:
@@ -204,26 +167,6 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
     click.echo(s, nl=False)
 
 
-def add(ctx: click.Context, address: str):
-    """Add a new currency by the contract address to the config
-    """
-
-    client: FlatQubeClient = ctx.obj['client']
-
-    try:
-        info = client.currency_by_address(address)
-    except Exception as err:
-        fail(ctx, 'Cannot get currency by address', err=err)
-        return
-
-    add_currency(info.name, info.address)
-
-    name = click.style(f'{info.name}', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
-    address = click.style(f'{info.address}', fg=cli_colors.value.fg, bold=cli_colors.value.bold)
-
-    click.echo(f"Currency {name} added with address {address}")
-
-
 def fail(ctx: click.Context, message: str, err: Optional[Exception] = None):
     """Print an error message and exit
     """
@@ -250,27 +193,18 @@ def currency():
     """
 
 
-@currency.command(name='config')
-@optgroup.group('Config options', cls=MutuallyExclusiveOptionGroup)
-@optgroup.option('--show-lists', is_flag=True, default=False, help='Show token lists')
-@optgroup.option('-l', '--list', 'currency_list', help='Show tokens from the given list')
-@optgroup.option('--add', 'address_to_add', help='Add a currency to the config by its contract address')
-@click.pass_context
-def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str], address_to_add: Optional[str]):
+@currency.group(name='config')
+def currency_config():
     """Currency config tools
     """
 
-    if show_lists:
-        s = ''
-        for c_list in config.currency_lists:
-            s += f'{c_list}\n'
 
-        click.echo(s, nl=False)
-        return
-
-    if address_to_add:
-        add(ctx, address_to_add)
-        return
+@currency_config.command(name='show')
+@click.option('-l', '--list', 'currency_list', help='Show tokens from the given list')
+@click.pass_context
+def show_currencies(ctx: click.Context, currency_list: str):
+    """Show currencies in the config or given list
+    """
 
     if currency_list:
         if currency_list not in config.currency_lists:
@@ -300,8 +234,39 @@ def config_(ctx: click.Context, show_lists: bool, currency_list: Optional[str], 
     click.echo(s, nl=False)
 
 
-sort_options = tuple(item.value for item in CurrencySortOptions)  # noqa
-sort_orders = tuple(item.value for item in CurrencySortOrders)  # noqa
+@currency_config.command()
+def lists():
+    """Show all currency lists
+    """
+
+    s = ''
+    for c_list in config.currency_lists:
+        s += f'{c_list}\n'
+
+    click.echo(s, nl=False)
+
+
+@currency_config.command()
+@click.argument('address')
+@click.pass_context
+def add_currency(ctx: click.Context, address: str):
+    """Add a new currency by the contract address to the config
+    """
+
+    client: FlatQubeClient = ctx.obj['client']
+
+    try:
+        info = client.currency_by_address(address)
+    except Exception as err:
+        fail(ctx, 'Cannot get currency by address', err=err)
+        return
+
+    add_currency_to_config(info.name, info.address)
+
+    name = click.style(f'{info.name}', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
+    address = click.style(f'{info.address}', fg=cli_colors.value.fg, bold=cli_colors.value.bold)
+
+    click.echo(f"Currency {name} added with address {address}")
 
 
 @currency.command()

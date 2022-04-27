@@ -131,7 +131,7 @@ def load_config() -> DictConfig:
 config = load_config()
 
 
-def add_currency(name: str, address: str):
+def add_currency_to_config(name: str, address: str):
     """Add a new currency to the user config
     """
 

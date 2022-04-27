@@ -5,12 +5,15 @@ api_urls:
   farming_indexer: "https://farming-pool-indexer.broxus.com/v1"
 
 quantize:
-  decimal_digits:
+  value_decimal_digits:
     1: 4
     2: 3
     3: 2
     4: 1
     5: 0
+
+  value_change_decimal_digits: 2
+  value_change_normalize: false
 
 cli_colors:
   error:
