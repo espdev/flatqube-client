@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, NamedTuple, Optional, Type, Union
+from typing import NamedTuple
 from pathlib import Path
 
 import appdirs
@@ -131,8 +131,8 @@ def load_config() -> DictConfig:
 config = load_config()
 
 
-def add_currency_to_config(name: str, address: str):
-    """Add a new currency to the user config
+def _load_or_create_user_config(draft_config: dict) -> DictConfig:
+    """Load or create the user config from the draft
     """
 
     if config_paths.user_path.exists():
@@ -148,11 +148,14 @@ def add_currency_to_config(name: str, address: str):
             raise SaveConfigError(
                 f"Cannot create a user directory '{config_paths.user_path.parent}': {err}") from err
 
-        cfg = OmegaConf.create({
-            'currencies': {}
-        })
+        cfg = OmegaConf.create(draft_config)
 
-    cfg.currencies[name] = address
+    return cfg
+
+
+def _save_user_config(cfg: DictConfig):
+    """Save the user config and update the config globally
+    """
 
     try:
         OmegaConf.save(cfg, config_paths.user_path)
@@ -162,3 +165,16 @@ def add_currency_to_config(name: str, address: str):
 
     global config
     config = load_config()
+
+
+def add_currency_to_config(name: str, address: str):
+    """Add a new currency to the user config
+    """
+
+    cfg = _load_or_create_user_config({
+        'currencies': {}
+    })
+
+    cfg.currencies[name] = address
+
+    _save_user_config(cfg)

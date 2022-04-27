@@ -20,6 +20,10 @@ cli_colors:
     fg: "bright_red"
     bold: true
 
+  address:
+    fg: "yellow"
+    bold: true
+
   table:
     fg: "bright_black"
     bold: true

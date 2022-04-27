@@ -264,9 +264,9 @@ def add_currency(ctx: click.Context, address: str):
     add_currency_to_config(info.name, info.address)
 
     name = click.style(f'{info.name}', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
-    address = click.style(f'{info.address}', fg=cli_colors.value.fg, bold=cli_colors.value.bold)
+    address = click.style(f'{info.address}', fg=cli_colors.address.fg, bold=cli_colors.address.bold)
 
-    click.echo(f"Currency {name} added with address {address}")
+    click.echo(f"{name} {address} was added to the user config")
 
 
 @currency.command()
