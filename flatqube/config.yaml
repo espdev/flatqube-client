@@ -93,10 +93,15 @@ currency_lists:
 
   everscale:
     - "WEVER"
-    - "QUBE"
     - "BRIDGE"
+    - "QUBE"
     - "EVS"
     - "LEND"
+
+  star:
+    - "WEVER"
+    - "BRIDGE"
+    - "QUBE"
 
   broxus:
     - "BRIDGE"
