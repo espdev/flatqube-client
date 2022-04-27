@@ -20,6 +20,10 @@ cli_colors:
     fg: "bright_red"
     bold: true
 
+  warning:
+    fg: "yellow"
+    bold: false
+
   address:
     fg: "yellow"
     bold: true

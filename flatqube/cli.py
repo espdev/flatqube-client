@@ -7,7 +7,7 @@ import sys
 
 import click
 
-from .config import config, add_currency_to_config
+from .config import config, add_currency_to_config, config_paths
 from .constants import CLI_NAME
 from .client import FlatQubeClient, CurrencySortOptions, CurrencySortOrders
 from .models import CurrencyInfo
@@ -186,6 +186,11 @@ def fail(ctx: click.Context, message: str, err: Optional[Exception] = None):
     ctx.fail(styled_message)
 
 
+def warn(message: str):
+    styled_message = click.style(message, fg=config.cli_colors.warning.fg, bold=config.cli_colors.warning.bold)
+    click.echo(styled_message)
+
+
 @click.group(name=CLI_NAME)
 @click.version_option(version=__version__, prog_name=CLI_NAME)
 @click.pass_context
@@ -203,10 +208,18 @@ def currency():
     """
 
 
-@currency.group(name='config')
+config_help = f"""
+Currency config tools
+
+The user config file is here:
+
+{config_paths.user_path}
+"""
+
+
+@currency.group(name='config', help=config_help)
 def currency_config():
-    """Currency config tools
-    """
+    pass
 
 
 @currency_config.command(name='show')
@@ -228,7 +241,12 @@ def show_currencies(ctx: click.Context, currency_list: str):
     title_name = 'Name'
     title_address = 'Address'
 
-    names, addresses = zip(*currencies.items())
+    if currencies:
+        names, addresses = zip(*currencies.items())
+    else:
+        names = ()
+        addresses = ()
+
     name_max_len = max(len(name) for name in names + (title_name,))
 
     s = click.style(f' {title_name:>{name_max_len}} │ {title_address}\n',
@@ -320,6 +338,13 @@ def show(ctx: click.Context, names: list[str],
             currencies_info = client.currencies(*names, sort=sort, sort_order=sort_order)
         except Exception as err:
             fail(ctx, f"Failed to get currencies info", err=err)
+            return
+
+        if not currencies_info:
+            message = 'There is nothing to show.'
+            if currency_list:
+                message = f"{message} '{currency_list}' list is empty."
+            warn(message)
             return
 
         print_currencies_info(currencies_info, sort, sort_order)
