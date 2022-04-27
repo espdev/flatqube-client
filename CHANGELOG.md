@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.6 (27.04.2022)
+
+- Fix formatting currencies
+- Update readme
+
 ## v0.1.5 (27.04.2022)
 
 - Bugfixes and CLI improvements
