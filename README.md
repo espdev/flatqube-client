@@ -50,6 +50,12 @@ flatqube currency show -l meme -s price-ch
 
 ![2022-04-27_20-58-13](https://user-images.githubusercontent.com/1299189/165589946-e9d1c943-ee13-4689-bf94-c45476674b8c.png)
 
+We can show currencies by names and currencies from multiple lists jointly:
+
+```
+flatqube currency show weth wbtc -l star -l stable
+```
+
 Also, we can run cli in "auto-update" mode. By default update interval is 5 seconds:
 
 ```
