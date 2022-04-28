@@ -10,7 +10,7 @@ from omegaconf import DictConfig
 
 from .config import config, add_currency_to_config, config_paths
 from .constants import CLI_NAME
-from .client import FlatQubeClient, CurrencySortOptions, CurrencySortOrders
+from .client import FlatQubeClient, CurrencySortBy, SortOrder
 from .models import CurrencyInfo
 from .utils import quantize_value, humanize_value, len_decimal
 from .version import __version__
@@ -20,8 +20,8 @@ cli_cfg = config.cli
 cli_colors = config.cli_colors
 tb_ch = config.cli_table.border_char
 
-sort_options = tuple(item.value for item in CurrencySortOptions)  # noqa
-sort_orders = tuple(item.value for item in CurrencySortOrders)  # noqa
+sort_options = tuple(item.value for item in CurrencySortBy)  # noqa
+sort_orders = tuple(item.value for item in SortOrder)  # noqa
 
 
 def format_value(title: str,
@@ -70,8 +70,8 @@ def format_value(title: str,
 
 
 def print_currencies_info(currencies_info: list[CurrencyInfo],
-                          sort: CurrencySortOptions,
-                          sort_order: CurrencySortOrders,
+                          sort: CurrencySortBy,
+                          sort_order: SortOrder,
                           show_trans_count: bool):
 
     def quantize_value_change(value_change: Decimal) -> Decimal:
@@ -118,35 +118,35 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
         )
 
     if len(currencies_info) > 1:
-        sort_indicator = ' ▴' if sort_order == CurrencySortOrders.ascend else ' ▾'
+        sort_indicator = ' ▴' if sort_order == SortOrder.ascend else ' ▾'
         change_sort_indicator = '%'
     else:
         sort_indicator = ''
         change_sort_indicator = ''
 
-    if sort == CurrencySortOptions.price:
+    if sort == CurrencySortBy.price:
         price_sort_indicator = sort_indicator
-    elif sort == CurrencySortOptions.price_change:
+    elif sort == CurrencySortBy.price_change:
         price_sort_indicator = sort_indicator + change_sort_indicator
     else:
         price_sort_indicator = ''
 
-    if sort == CurrencySortOptions.tvl:
+    if sort == CurrencySortBy.tvl:
         tvl_sort_indicator = sort_indicator
-    elif sort == CurrencySortOptions.tvl_change:
+    elif sort == CurrencySortBy.tvl_change:
         tvl_sort_indicator = sort_indicator + change_sort_indicator
     else:
         tvl_sort_indicator = ''
 
-    if sort == CurrencySortOptions.volume24h:
+    if sort == CurrencySortBy.volume_24h:
         volume_24h_sort_indicator = sort_indicator
-    elif sort == CurrencySortOptions.volume24h_change:
+    elif sort == CurrencySortBy.volume_24h_change:
         volume_24h_sort_indicator = sort_indicator + change_sort_indicator
     else:
         volume_24h_sort_indicator = ''
 
-    volume_7d_sort_indicator = sort_indicator if sort == CurrencySortOptions.volume7d else ''
-    trans_24h_sort_indicator = sort_indicator if sort == CurrencySortOptions.trans24h else ''
+    volume_7d_sort_indicator = sort_indicator if sort == CurrencySortBy.volume_7d else ''
+    trans_24h_sort_indicator = sort_indicator if sort == CurrencySortBy.transaction_count_24h else ''
 
     name_title = 'Name'
     price_title = ' Price' + price_sort_indicator
@@ -345,8 +345,8 @@ def show(ctx: click.Context,
 
     names = list(names)
 
-    sort = CurrencySortOptions(sort)
-    sort_order = CurrencySortOrders(sort_order)
+    sort = CurrencySortBy(sort)
+    sort_order = SortOrder(sort_order)
 
     for currency_list in currency_lists:
         if currency_list not in config.currency_lists:
@@ -369,7 +369,7 @@ def show(ctx: click.Context,
             sys.stdout.write("\033[K")
 
         try:
-            currencies_info = client.currencies(*names, sort=sort, sort_order=sort_order)
+            currencies_info = client.currencies(names, sort_by=sort, sort_order=sort_order)
         except Exception as err:
             fail(ctx, f"Failed to get currencies info", err=err)
             return

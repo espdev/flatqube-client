@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, Union
 from enum import Enum
-from itertools import count
+from operator import attrgetter
+from typing import Optional, Union, Iterable, Generic, TypeVar
 
 import requests
 from pydantic import ValidationError
@@ -15,21 +15,51 @@ class FlatQubeClientError(Exception):
     pass
 
 
-class CurrencySortOptions(str, Enum):
-    none = 'none'
+class SortOrder(str, Enum):
+    ascend = 'ascend'
+    descend = 'descend'
+
+
+TData = TypeVar('TData', bound=Union[CurrencyInfo])
+
+
+class SortBy(Generic[TData]):
+    """Generic sort by
+    """
+
+    def __call__(self: Enum,
+                 iterable: Iterable[TData],
+                 *,
+                 order: SortOrder = SortOrder.descend,
+                 inplace: bool = False) -> Optional[list[TData]]:
+        """Sort the given sequency of data by the sort option
+        """
+
+        key = attrgetter(self.name)
+        reverse = True if order == SortOrder.descend else False
+
+        if inplace:
+            if isinstance(iterable, list):
+                iterable.sort(key=key, reverse=reverse)
+            else:
+                raise TypeError("The argument must be a list for sorting inplace.")
+            return None
+        else:
+            return sorted(iterable, key=key, reverse=reverse)
+
+
+class CurrencySortBy(SortBy[CurrencyInfo], str, Enum):
+    """Currency sort by
+    """
+
     price = 'price'
     price_change = 'price-ch'
     tvl = 'tvl'
     tvl_change = 'tvl-ch'
-    volume24h = 'vol24h'
-    volume24h_change = 'vol24h-ch'
-    volume7d = 'vol7d'
-    trans24h = 'trans24h'
-
-
-class CurrencySortOrders(str, Enum):
-    ascend = 'ascend'
-    descend = 'descend'
+    volume_24h = 'vol24h'
+    volume_24h_change = 'vol24h-ch'
+    volume_7d = 'vol7d'
+    transaction_count_24h = 'trans24h'
 
 
 class FlatQubeClient:
@@ -62,13 +92,17 @@ class FlatQubeClient:
         api_url = f'{self._swap_api_url}/currencies/{address}'
         currency_info = self._request(self.session.post, api_url)
 
-        return CurrencyInfo.parse_obj(currency_info)
+        try:
+            return CurrencyInfo.parse_obj(currency_info)
+        except ValidationError as err:
+            raise FlatQubeClientError(f'Cannot parse currency info\n{err}') from err
 
-    def currency(self, name: str) -> CurrencyInfo:
+    def currency_by_name(self, name: str) -> CurrencyInfo:
         """Get currency info by name
         """
 
-        currency_address = config.currencies.get(name.upper())
+        name = name.upper()
+        currency_address = config.currencies.get(name)
 
         if not currency_address:
             raise FlatQubeClientError(
@@ -76,14 +110,15 @@ class FlatQubeClient:
 
         return self.currency_by_address(address=currency_address)
 
-    def currencies(self, *names: str,
-                   sort: Union[str, CurrencySortOptions] = CurrencySortOptions.none,
-                   sort_order: Union[str, CurrencySortOrders] = CurrencySortOrders.ascend) -> list[CurrencyInfo]:
+    def currencies(self,
+                   names: Iterable[str],
+                   sort_by: Union[str, CurrencySortBy] = CurrencySortBy.tvl,
+                   sort_order: Union[str, SortOrder] = SortOrder.ascend) -> list[CurrencyInfo]:
         """Get currencies info
         """
 
-        sort = CurrencySortOptions(sort)
-        sort_order = CurrencySortOrders(sort_order)
+        sort_by = CurrencySortBy(sort_by)
+        sort_order = SortOrder(sort_order)
 
         currency_addresses = []
 
@@ -92,7 +127,7 @@ class FlatQubeClient:
 
             if not currency_address:
                 raise FlatQubeClientError(
-                    f"'{name}' currency address is unknown. The currency does not exist in the config.")
+                    f"'{name.upper()}' currency address is unknown. The currency does not exist in the config.")
 
             currency_addresses.append(currency_address)
 
@@ -102,7 +137,6 @@ class FlatQubeClient:
             'currencyAddresses': currency_addresses,
             "limit": len(currency_addresses),
             "offset": 0,
-            'ordering': 'tvlascending',
         }
 
         info = self._request(self.session.post, api_url, data=data)
@@ -115,30 +149,7 @@ class FlatQubeClient:
         except ValidationError as err:
             raise FlatQubeClientError(f'Cannot parse currency info\n{err}') from err
 
-        name_indices = {name: index for name, index in zip(names, count())}
-
-        def _sort_currencies(currency: CurrencyInfo):
-            if sort == CurrencySortOptions.none:
-                return name_indices[currency.name]
-            elif sort == CurrencySortOptions.price:
-                return currency.price
-            elif sort == CurrencySortOptions.price_change:
-                return currency.price_change
-            elif sort == CurrencySortOptions.tvl:
-                return currency.tvl
-            elif sort == CurrencySortOptions.tvl_change:
-                return currency.tvl_change
-            elif sort == CurrencySortOptions.volume24h:
-                return currency.volume_24h
-            elif sort == CurrencySortOptions.volume24h_change:
-                return currency.volume_change_24h
-            elif sort == CurrencySortOptions.volume7d:
-                return currency.volume_7d
-            elif sort == CurrencySortOptions.trans24h:
-                return currency.transaction_count_24h
-
-        reverse = True if sort_order == CurrencySortOrders.descend else False
-        currencies.sort(key=_sort_currencies, reverse=reverse)
+        sort_by(currencies, order=sort_order, inplace=True)
 
         return currencies
 
