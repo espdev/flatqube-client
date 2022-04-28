@@ -4,6 +4,9 @@ api_urls:
   swap_indexer: "https://ton-swap-indexer.broxus.com/v1"
   farming_indexer: "https://farming-pool-indexer.broxus.com/v1"
 
+api_bulk_limit: 200
+token_white_list_url: "https://raw.githubusercontent.com/broxus/ton-assets/master/manifest.json"
+
 quantize:
   value_decimal_digits:
     1: 4

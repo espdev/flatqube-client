@@ -110,6 +110,49 @@ class FlatQubeClient:
 
         return self.currency_by_address(address=currency_address)
 
+    def total_currencies(self, white_list_url: Optional[str] = None) -> int:
+        """Return total currencies on the service or a white list
+        """
+
+        api_url = f'{self._swap_api_url}/currencies'
+
+        data = {
+            "limit": 0,
+            "offset": 0,
+            "whiteListUri": white_list_url,
+        }
+
+        info = self._request(self.session.post, api_url, data=data)
+        return info['totalCount']
+
+    def all_currencies(self, white_list_url: Optional[str] = None) -> Iterable[CurrencyInfo]:
+        """Generator for all currencies from the service or a white list
+        """
+
+        api_url = f'{self._swap_api_url}/currencies'
+
+        data = {
+            "limit": config.api_bulk_limit,
+            "offset": 0,
+            "whiteListUri": white_list_url,
+        }
+
+        while True:
+            info = self._request(self.session.post, api_url, data=data)
+
+            for currency in info['currencies']:
+                try:
+                    yield CurrencyInfo.parse_obj(currency)
+                except ValidationError as err:
+                    raise FlatQubeClientError(f'Cannot parse currency data "{currency}"\n{err}') from err
+
+            offset = data['offset'] + len(info['currencies'])
+
+            if offset == info['totalCount']:
+                break
+
+            data['offset'] = offset
+
     def currencies(self,
                    names: Iterable[str],
                    sort_by: Union[str, CurrencySortBy] = CurrencySortBy.tvl,
