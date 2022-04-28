@@ -323,7 +323,8 @@ def add_currency(ctx: click.Context, address: str):
 
 @currency.command()
 @click.argument('names', nargs=-1)
-@click.option('-l', '--list', 'currency_list', default=None, help="The list of tokens to show from the config")
+@click.option('-l', '--list', 'currency_lists', default=(), multiple=True,
+              help="The list(s) of tokens to show from the config")
 @click.option('-s', '--sort', type=click.Choice(sort_options), default=cli_cfg.currency.show.sort,
               show_default=True, help="Sort displayed currencies")
 @click.option('-o', '--sort-order', type=click.Choice(sort_orders), default=cli_cfg.currency.show.sort_order,
@@ -333,28 +334,33 @@ def add_currency(ctx: click.Context, address: str):
 @click.option('-i', '--update-interval', type=float, default=cli_cfg.currency.show.update_interval, show_default=True,
               help='Auto update interval in seconds')
 @click.pass_context
-def show(ctx: click.Context, names: list[str],
-         currency_list: Optional[str],
+def show(ctx: click.Context,
+         names: tuple[str],
+         currency_lists: Optional[tuple[str]],
          sort: str, sort_order: str,
          show_trans_count: bool,
          update: bool, update_interval: float):
     """Show currencies info
     """
 
+    names = list(names)
+
     sort = CurrencySortOptions(sort)
     sort_order = CurrencySortOrders(sort_order)
 
-    if not names and not currency_list:
-        names = config.currency_lists[cli_cfg.currency.show.default_list]
-    elif not names and currency_list:
+    for currency_list in currency_lists:
         if currency_list not in config.currency_lists:
-            fail(ctx, f"'{currency_list}' currency list does not exist in the config.")
-        names = config.currency_lists[currency_list]
-    elif names and currency_list:
-        fail(ctx, "'-l/--list' option is not allowed if NAMES were set.")
+            warn(f"'{currency_list}' currency list does not exist in the config.")
+            continue
+        list_names = config.currency_lists[currency_list]
+        names.extend(list_names)
+
+    if not names:
+        names = config.currency_lists[cli_cfg.currency.show.default_list]
+
+    names = set(names)
 
     client: FlatQubeClient = ctx.obj['client']
-
     lines = 0
 
     while True:
@@ -366,13 +372,6 @@ def show(ctx: click.Context, names: list[str],
             currencies_info = client.currencies(*names, sort=sort, sort_order=sort_order)
         except Exception as err:
             fail(ctx, f"Failed to get currencies info", err=err)
-            return
-
-        if not currencies_info:
-            message = 'There is nothing to show.'
-            if currency_list:
-                message = f"{message} '{currency_list}' list is empty."
-            warn(message)
             return
 
         print_currencies_info(currencies_info, sort, sort_order, show_trans_count)
