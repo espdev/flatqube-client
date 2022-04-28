@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.9 (28.04.2022)
+
+- Improve `currency show` command:
+  * add support of multiple currency lists
+  * add support of passing both currency lists and currency names jointly
+
 ## v0.1.8 (27.04.2022)
 
 - Fix table border. Add table border character to config
