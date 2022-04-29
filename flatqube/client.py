@@ -153,6 +153,12 @@ class FlatQubeClient:
 
             data['offset'] = offset
 
+    def whitelist_currencies(self) -> Iterable[CurrencyInfo]:
+        """Return Broxus white list currencies
+        """
+
+        return self.all_currencies(white_list_url=config.token_white_list_url)
+
     def currencies(self,
                    names: Iterable[str],
                    sort_by: Union[str, CurrencySortBy] = CurrencySortBy.tvl,
