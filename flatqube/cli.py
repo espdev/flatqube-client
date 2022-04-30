@@ -8,7 +8,7 @@ import sys
 import click
 from omegaconf import DictConfig
 
-from .config import config, add_currency_to_config, config_paths
+from .config import config, add_currency_to_config, config_paths, add_currency_list_to_config
 from .constants import CLI_NAME
 from .client import FlatQubeClient, CurrencySortBy, SortOrder
 from .models import CurrencyInfo
@@ -256,13 +256,11 @@ def show_currencies(ctx: click.Context, currency_list: str):
     """
 
     if currency_list:
-        if currency_list not in config.currency_lists:
+        if currency_list not in config.currencies:
             fail(ctx, f"'{currency_list}' does not exist.")
-
-        names = config.currency_lists[currency_list]
-        currencies = {name: address for name, address in config.currencies.items() if name in names}
+        currencies = {name: address for name, address in config.currencies[currency_list].items()}
     else:
-        currencies = config.currencies
+        currencies = config.currencies['_whitelist']
 
     title_name = 'Name'
     title_address = 'Address'
@@ -292,37 +290,46 @@ def lists():
     """
 
     s = ''
-    for c_list in config.currency_lists:
-        s += f'{c_list}\n'
+    for currency_list in config.currencies:
+        if not currency_list.startswith('_'):
+            s += f'{currency_list}\n'
 
     click.echo(s, nl=False)
 
 
 @currency_config.command()
 @click.argument('address')
+@click.option('-l', '--list', 'list_name', default=None, help='The list name to add currency')
 @click.pass_context
-def add_currency(ctx: click.Context, address: str):
+def add_currency(ctx: click.Context, address: str, list_name: Optional[str]):
     """Add a new currency by the contract address to the config
     """
 
     client: FlatQubeClient = ctx.obj['client']
 
     try:
-        info = client.currency_by_address(address)
+        currency_info = client.currency(address)
     except Exception as err:
         fail(ctx, 'Cannot get currency by address', err=err)
         return
 
-    add_currency_to_config(info.name, info.address)
+    if list_name and list_name.startswith('_'):
+        fail(ctx, f"Invalid list name: '{list_name}'. It is not allowed to start a list name with underscore.")
 
-    name = click.style(f'{info.name}', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
-    address = click.style(f'{info.address}', fg=cli_colors.address.fg, bold=cli_colors.address.bold)
+    add_currency_to_config(currency_info.name, currency_info.address, list_name)
 
-    click.echo(f"{name} {address} was added to the user config")
+    name = click.style(f'{currency_info.name}', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
+    address = click.style(f'{currency_info.address}', fg=cli_colors.address.fg, bold=cli_colors.address.bold)
+
+    if list_name:
+        list_name_s = click.style(f'{list_name}', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
+        click.echo(f"{name} {address} was added to '{list_name_s}' list to the user config")
+    else:
+        click.echo(f"{name} {address} was added to the user config")
 
 
 @currency.command()
-@click.argument('names', nargs=-1)
+@click.argument('currency_names', nargs=-1)
 @click.option('-l', '--list', 'currency_lists', default=(), multiple=True,
               help="The list(s) of tokens to show from the config")
 @click.option('-s', '--sort', type=click.Choice(sort_options), default=cli_cfg.currency.show.sort,
@@ -335,7 +342,7 @@ def add_currency(ctx: click.Context, address: str):
               help='Auto update interval in seconds')
 @click.pass_context
 def show(ctx: click.Context,
-         names: tuple[str],
+         currency_names: tuple[str],
          currency_lists: Optional[tuple[str]],
          sort: str, sort_order: str,
          show_trans_count: bool,
@@ -343,24 +350,51 @@ def show(ctx: click.Context,
     """Show currencies info
     """
 
-    names = list(names)
-
     sort = CurrencySortBy(sort)
     sort_order = SortOrder(sort_order)
 
+    client: FlatQubeClient = ctx.obj['client']
+
+    if not config.currencies['_whitelist']:
+        try:
+            currencies = {
+                cr.name.upper(): cr.address for cr in client.whitelist_currencies()
+            }
+        except Exception as err:
+            fail(ctx, f"Failed to get whitelist currencies", err=err)
+            return
+        add_currency_list_to_config('_whitelist', currencies)
+
+    currency_addresses = []
+
+    if currency_names:
+        whitelist = config.currencies['_whitelist']
+        default = config.currencies['_default']
+
+        for name in currency_names:
+            name = name.upper()
+
+            if name in whitelist:
+                currency_addresses.append(whitelist[name])
+            elif name in default:
+                currency_addresses.append(default[name])
+            else:
+                warn(f"'{name}' currency name does not exist in white list and default list in the config.")
+
     for currency_list in currency_lists:
-        if currency_list not in config.currency_lists:
+        if currency_list.startswith('_') or currency_list not in config.currencies:
             warn(f"'{currency_list}' currency list does not exist in the config.")
             continue
-        list_names = config.currency_lists[currency_list]
-        names.extend(list_names)
 
-    if not names:
-        names = config.currency_lists[cli_cfg.currency.show.default_list]
+        list_currencies = config.currencies[currency_list]
+        currency_addresses.extend(list_currencies.values())
 
-    names = set(names)
+    currency_addresses = set(currency_addresses)
 
-    client: FlatQubeClient = ctx.obj['client']
+    if not currency_addresses:
+        warn('There is nothing to show.')
+        return
+
     lines = 0
 
     while True:
@@ -369,7 +403,7 @@ def show(ctx: click.Context,
             sys.stdout.write("\033[K")
 
         try:
-            currencies_info = client.currencies(names, sort_by=sort, sort_order=sort_order)
+            currencies_info = client.currencies(currency_addresses, sort_by=sort, sort_order=sort_order)
         except Exception as err:
             fail(ctx, f"Failed to get currencies info", err=err)
             return

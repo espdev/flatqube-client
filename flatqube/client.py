@@ -85,7 +85,7 @@ class FlatQubeClient:
             self._session = requests.Session()
         return self._session
 
-    def currency_by_address(self, address: str) -> CurrencyInfo:
+    def currency(self, address: str) -> CurrencyInfo:
         """Get currency info by address
         """
 
@@ -96,19 +96,6 @@ class FlatQubeClient:
             return CurrencyInfo.parse_obj(currency_info)
         except ValidationError as err:
             raise FlatQubeClientError(f'Cannot parse currency info\n{err}') from err
-
-    def currency_by_name(self, name: str) -> CurrencyInfo:
-        """Get currency info by name
-        """
-
-        name = name.upper()
-        currency_address = config.currencies.get(name)
-
-        if not currency_address:
-            raise FlatQubeClientError(
-                f"'{name}' currency address is unknown. The currency does not exist in the config.")
-
-        return self.currency_by_address(address=currency_address)
 
     def total_currencies(self, white_list_url: Optional[str] = None) -> int:
         """Return total currencies on the service or a white list
@@ -160,31 +147,22 @@ class FlatQubeClient:
         return self.all_currencies(white_list_url=config.token_white_list_url)
 
     def currencies(self,
-                   names: Iterable[str],
+                   addresses: Iterable[str],
                    sort_by: Union[str, CurrencySortBy] = CurrencySortBy.tvl,
                    sort_order: Union[str, SortOrder] = SortOrder.ascend) -> list[CurrencyInfo]:
-        """Get currencies info
+        """Get currencies info by names
         """
+
+        addresses = list(addresses)
 
         sort_by = CurrencySortBy(sort_by)
         sort_order = SortOrder(sort_order)
 
-        currency_addresses = []
-
-        for name in names:
-            currency_address = config.currencies.get(name.upper())
-
-            if not currency_address:
-                raise FlatQubeClientError(
-                    f"'{name.upper()}' currency address is unknown. The currency does not exist in the config.")
-
-            currency_addresses.append(currency_address)
-
         api_url = f'{self._swap_api_url}/currencies'
 
         data = {
-            'currencyAddresses': currency_addresses,
-            "limit": len(currency_addresses),
+            'currencyAddresses': addresses,
+            "limit": len(addresses),
             "offset": 0,
         }
 
