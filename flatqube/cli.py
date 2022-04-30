@@ -248,6 +248,27 @@ def currency_config():
     pass
 
 
+@currency_config.command()
+@click.pass_context
+def update_whitelist(ctx: click.Context):
+    """Update Broxus whitelist currencies in the config
+    """
+
+    client: FlatQubeClient = ctx.obj['client']
+
+    try:
+        currencies = {
+            cr.name.upper(): cr.address for cr in client.whitelist_currencies()
+        }
+    except Exception as err:
+        fail(ctx, f"Failed to get whitelist currencies", err=err)
+        return
+
+    add_currency_list_to_config('_whitelist', currencies)
+
+    click.echo(f'The whitelist was updated with {len(currencies)} currencies')
+
+
 @currency_config.command(name='show')
 @click.option('-l', '--list', 'currency_list', help='Show tokens from the given list')
 @click.pass_context
