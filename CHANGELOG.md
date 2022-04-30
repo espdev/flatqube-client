@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.0 (30.04.2022)
+
+- Improve the client API
+- Change config format for currencies
+
 ## v0.1.9 (28.04.2022)
 
 - Improve `currency show` command:

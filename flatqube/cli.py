@@ -8,9 +8,9 @@ import sys
 import click
 from omegaconf import DictConfig
 
-from .config import config, add_currency_to_config, config_paths
+from .config import config, add_currency_to_config, config_paths, add_currency_list_to_config
 from .constants import CLI_NAME
-from .client import FlatQubeClient, CurrencySortOptions, CurrencySortOrders
+from .client import FlatQubeClient, CurrencySortBy, SortOrder
 from .models import CurrencyInfo
 from .utils import quantize_value, humanize_value, len_decimal
 from .version import __version__
@@ -20,8 +20,8 @@ cli_cfg = config.cli
 cli_colors = config.cli_colors
 tb_ch = config.cli_table.border_char
 
-sort_options = tuple(item.value for item in CurrencySortOptions)  # noqa
-sort_orders = tuple(item.value for item in CurrencySortOrders)  # noqa
+sort_options = tuple(item.value for item in CurrencySortBy)  # noqa
+sort_orders = tuple(item.value for item in SortOrder)  # noqa
 
 
 def format_value(title: str,
@@ -70,8 +70,8 @@ def format_value(title: str,
 
 
 def print_currencies_info(currencies_info: list[CurrencyInfo],
-                          sort: CurrencySortOptions,
-                          sort_order: CurrencySortOrders,
+                          sort: CurrencySortBy,
+                          sort_order: SortOrder,
                           show_trans_count: bool):
 
     def quantize_value_change(value_change: Decimal) -> Decimal:
@@ -118,35 +118,35 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
         )
 
     if len(currencies_info) > 1:
-        sort_indicator = ' ▴' if sort_order == CurrencySortOrders.ascend else ' ▾'
+        sort_indicator = ' ▴' if sort_order == SortOrder.ascend else ' ▾'
         change_sort_indicator = '%'
     else:
         sort_indicator = ''
         change_sort_indicator = ''
 
-    if sort == CurrencySortOptions.price:
+    if sort == CurrencySortBy.price:
         price_sort_indicator = sort_indicator
-    elif sort == CurrencySortOptions.price_change:
+    elif sort == CurrencySortBy.price_change:
         price_sort_indicator = sort_indicator + change_sort_indicator
     else:
         price_sort_indicator = ''
 
-    if sort == CurrencySortOptions.tvl:
+    if sort == CurrencySortBy.tvl:
         tvl_sort_indicator = sort_indicator
-    elif sort == CurrencySortOptions.tvl_change:
+    elif sort == CurrencySortBy.tvl_change:
         tvl_sort_indicator = sort_indicator + change_sort_indicator
     else:
         tvl_sort_indicator = ''
 
-    if sort == CurrencySortOptions.volume24h:
+    if sort == CurrencySortBy.volume_24h:
         volume_24h_sort_indicator = sort_indicator
-    elif sort == CurrencySortOptions.volume24h_change:
+    elif sort == CurrencySortBy.volume_24h_change:
         volume_24h_sort_indicator = sort_indicator + change_sort_indicator
     else:
         volume_24h_sort_indicator = ''
 
-    volume_7d_sort_indicator = sort_indicator if sort == CurrencySortOptions.volume7d else ''
-    trans_24h_sort_indicator = sort_indicator if sort == CurrencySortOptions.trans24h else ''
+    volume_7d_sort_indicator = sort_indicator if sort == CurrencySortBy.volume_7d else ''
+    trans_24h_sort_indicator = sort_indicator if sort == CurrencySortBy.transaction_count_24h else ''
 
     name_title = 'Name'
     price_title = ' Price' + price_sort_indicator
@@ -248,6 +248,27 @@ def currency_config():
     pass
 
 
+@currency_config.command()
+@click.pass_context
+def update_whitelist(ctx: click.Context):
+    """Update Broxus whitelist currencies in the config
+    """
+
+    client: FlatQubeClient = ctx.obj['client']
+
+    try:
+        currencies = {
+            cr.name.upper(): cr.address for cr in client.whitelist_currencies()
+        }
+    except Exception as err:
+        fail(ctx, f"Failed to get whitelist currencies", err=err)
+        return
+
+    add_currency_list_to_config('_whitelist', currencies)
+
+    click.echo(f'The whitelist was updated with {len(currencies)} currencies')
+
+
 @currency_config.command(name='show')
 @click.option('-l', '--list', 'currency_list', help='Show tokens from the given list')
 @click.pass_context
@@ -256,13 +277,11 @@ def show_currencies(ctx: click.Context, currency_list: str):
     """
 
     if currency_list:
-        if currency_list not in config.currency_lists:
+        if currency_list not in config.currencies:
             fail(ctx, f"'{currency_list}' does not exist.")
-
-        names = config.currency_lists[currency_list]
-        currencies = {name: address for name, address in config.currencies.items() if name in names}
+        currencies = {name: address for name, address in config.currencies[currency_list].items()}
     else:
-        currencies = config.currencies
+        currencies = config.currencies['_whitelist']
 
     title_name = 'Name'
     title_address = 'Address'
@@ -292,37 +311,46 @@ def lists():
     """
 
     s = ''
-    for c_list in config.currency_lists:
-        s += f'{c_list}\n'
+    for currency_list in config.currencies:
+        if not currency_list.startswith('_'):
+            s += f'{currency_list}\n'
 
     click.echo(s, nl=False)
 
 
 @currency_config.command()
 @click.argument('address')
+@click.option('-l', '--list', 'list_name', default=None, help='The list name to add currency')
 @click.pass_context
-def add_currency(ctx: click.Context, address: str):
+def add_currency(ctx: click.Context, address: str, list_name: Optional[str]):
     """Add a new currency by the contract address to the config
     """
 
     client: FlatQubeClient = ctx.obj['client']
 
     try:
-        info = client.currency_by_address(address)
+        currency_info = client.currency(address)
     except Exception as err:
         fail(ctx, 'Cannot get currency by address', err=err)
         return
 
-    add_currency_to_config(info.name, info.address)
+    if list_name and list_name.startswith('_'):
+        fail(ctx, f"Invalid list name: '{list_name}'. It is not allowed to start a list name with underscore.")
 
-    name = click.style(f'{info.name}', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
-    address = click.style(f'{info.address}', fg=cli_colors.address.fg, bold=cli_colors.address.bold)
+    add_currency_to_config(currency_info.name, currency_info.address, list_name)
 
-    click.echo(f"{name} {address} was added to the user config")
+    name = click.style(f'{currency_info.name}', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
+    address = click.style(f'{currency_info.address}', fg=cli_colors.address.fg, bold=cli_colors.address.bold)
+
+    if list_name:
+        list_name_s = click.style(f'{list_name}', fg=cli_colors.name.fg, bold=cli_colors.name.bold)
+        click.echo(f"{name} {address} was added to '{list_name_s}' list to the user config")
+    else:
+        click.echo(f"{name} {address} was added to the user config")
 
 
 @currency.command()
-@click.argument('names', nargs=-1)
+@click.argument('currency_names', nargs=-1)
 @click.option('-l', '--list', 'currency_lists', default=(), multiple=True,
               help="The list(s) of tokens to show from the config")
 @click.option('-s', '--sort', type=click.Choice(sort_options), default=cli_cfg.currency.show.sort,
@@ -335,7 +363,7 @@ def add_currency(ctx: click.Context, address: str):
               help='Auto update interval in seconds')
 @click.pass_context
 def show(ctx: click.Context,
-         names: tuple[str],
+         currency_names: tuple[str],
          currency_lists: Optional[tuple[str]],
          sort: str, sort_order: str,
          show_trans_count: bool,
@@ -343,24 +371,51 @@ def show(ctx: click.Context,
     """Show currencies info
     """
 
-    names = list(names)
-
-    sort = CurrencySortOptions(sort)
-    sort_order = CurrencySortOrders(sort_order)
-
-    for currency_list in currency_lists:
-        if currency_list not in config.currency_lists:
-            warn(f"'{currency_list}' currency list does not exist in the config.")
-            continue
-        list_names = config.currency_lists[currency_list]
-        names.extend(list_names)
-
-    if not names:
-        names = config.currency_lists[cli_cfg.currency.show.default_list]
-
-    names = set(names)
+    sort = CurrencySortBy(sort)
+    sort_order = SortOrder(sort_order)
 
     client: FlatQubeClient = ctx.obj['client']
+
+    if not config.currencies['_whitelist']:
+        try:
+            currencies = {
+                cr.name.upper(): cr.address for cr in client.whitelist_currencies()
+            }
+        except Exception as err:
+            fail(ctx, f"Failed to get whitelist currencies", err=err)
+            return
+        add_currency_list_to_config('_whitelist', currencies)
+
+    currency_addresses = []
+
+    if currency_names:
+        whitelist = config.currencies['_whitelist']
+        default = config.currencies['_default']
+
+        for name in currency_names:
+            name = name.upper()
+
+            if name in whitelist:
+                currency_addresses.append(whitelist[name])
+            elif name in default:
+                currency_addresses.append(default[name])
+            else:
+                warn(f"'{name}' currency name does not exist in white list and default list in the config.")
+
+    for currency_list in currency_lists:
+        if currency_list.startswith('_') or currency_list not in config.currencies:
+            warn(f"'{currency_list}' currency list does not exist in the config.")
+            continue
+
+        list_currencies = config.currencies[currency_list]
+        currency_addresses.extend(list_currencies.values())
+
+    currency_addresses = set(currency_addresses)
+
+    if not currency_addresses:
+        warn('There is nothing to show.')
+        return
+
     lines = 0
 
     while True:
@@ -369,7 +424,7 @@ def show(ctx: click.Context,
             sys.stdout.write("\033[K")
 
         try:
-            currencies_info = client.currencies(*names, sort=sort, sort_order=sort_order)
+            currencies_info = client.currencies(currency_addresses, sort_by=sort, sort_order=sort_order)
         except Exception as err:
             fail(ctx, f"Failed to get currencies info", err=err)
             return

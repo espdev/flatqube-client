@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 from pathlib import Path
 
 import appdirs
@@ -165,17 +165,39 @@ def _save_user_config(cfg: DictConfig):
             f"Cannot save the user configuration to '{config_paths.user_path}': {err}") from err
 
     global config
-    config = load_config()
+
+    config.clear()
+    config.update(load_config())
 
 
-def add_currency_to_config(name: str, address: str):
+def add_currency_to_config(name: str, address: str, list_name: Optional[str] = None):
     """Add a new currency to the user config
     """
 
+    list_name = list_name or '_default'
+
     cfg = _load_or_create_user_config({
-        'currencies': {}
+        'currencies': {
+            list_name: {}
+        }
     })
 
-    cfg.currencies[name.upper()] = address
+    if not cfg.currencies.get(list_name):
+        cfg.currencies[list_name] = {}
 
+    cfg.currencies[list_name][name] = address
+    _save_user_config(cfg)
+
+
+def add_currency_list_to_config(list_name: str, currencies: dict[str, str]):
+    """Add currency list to config
+    """
+
+    cfg = _load_or_create_user_config({
+        'currencies': {
+            list_name: {}
+        }
+    })
+
+    cfg.currencies[list_name] = currencies
     _save_user_config(cfg)
