@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.2 (01.05.2022)
+
+- Fix `currency show` command for default (`whitelist`) list: get value from the config
+- Update readme
+
 ## v0.2.1 (01.05.2022)
 
 - Fix `currency show` command for default (`whitelist`) list

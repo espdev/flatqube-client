@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "flatqube-client"
-version = "0.2.1"
+version = "0.2.2"
 description = "FlatQube API client library and CLI tools"
 authors = ["Evgeny Prilepin <esp.home@gmail.com>"]
 license = "MIT"
