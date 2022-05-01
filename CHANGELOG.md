@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.3 (01.05.2022)
+
+- Change CLI structure
+  * Move `config` subcommand to CLI top level
+  * Rename some subcommands
+
 ## v0.2.2 (01.05.2022)
 
 - Fix `currency show` command for default (`whitelist`) list: get value from the config
