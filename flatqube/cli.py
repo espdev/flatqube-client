@@ -228,14 +228,8 @@ def cli(ctx: click.Context):
     ctx.obj['client'] = FlatQubeClient()
 
 
-@cli.group()
-def currency():
-    """FlatQube currencies info
-    """
-
-
 config_help = f"""
-Currency config tools
+Configuration and setting management
 
 The user config file is here:
 
@@ -243,9 +237,15 @@ The user config file is here:
 """
 
 
-@currency.group(name='config', help=config_help)
-def currency_config():
+@cli.group(name='config', help=config_help)
+def cli_config():
     pass
+
+
+@cli_config.group(name='currency')
+def currency_config():
+    """Currency info config
+    """
 
 
 @currency_config.command()
@@ -307,7 +307,7 @@ def show_currencies(ctx: click.Context, currency_list: str):
 
 @currency_config.command()
 def lists():
-    """Show all currency lists
+    """Show all currency lists in the config
     """
 
     s = ''
@@ -318,7 +318,7 @@ def lists():
     click.echo(s, nl=False)
 
 
-@currency_config.command()
+@currency_config.command(name='add')
 @click.argument('address')
 @click.option('-l', '--list', 'list_name', default=None, help='The list name to add currency')
 @click.pass_context
@@ -347,6 +347,14 @@ def add_currency(ctx: click.Context, address: str, list_name: Optional[str]):
         click.echo(f"{name} {address} was added to '{list_name_s}' list to the user config")
     else:
         click.echo(f"{name} {address} was added to the user config")
+
+
+@cli.group()
+def currency():
+    """FlatQube currencies (tokens) info
+
+    The CLI shows currency prices, price changes, TVL, volume and more info.
+    """
 
 
 @currency.command()
