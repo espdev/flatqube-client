@@ -37,10 +37,18 @@ def styled_text(text: str, style_def: str, rendered: bool = False):
 
 
 def quantize_value(value: Decimal, decimal_digits: Optional[int] = None, normalize: bool = True) -> Decimal:
+    """Quantize a decimal value
+    """
+
     if not decimal_digits:
         value_int = value.to_integral_value()
-        num_int_digits = len(value_int.as_tuple().digits)
-        decimal_digits = config.quantize.value_decimal_digits.get(num_int_digits, 0)
+        int_digits = value_int.as_tuple().digits
+        decimal_digits = config.quantize.value_decimal_digits.get(len(int_digits), 0)
+
+        if value_int.is_zero():
+            v_tuple = value.as_tuple()
+            zero_digits = abs(len(v_tuple.digits) + v_tuple.exponent)
+            decimal_digits += zero_digits
 
     exponent = Decimal('1.{}'.format('0' * decimal_digits))
     value = value.quantize(exponent)
@@ -62,15 +70,17 @@ def format_value(value, prefix=USD_PREFIX, style=console_styles.value):
         value = quantize_value(value)
     else:
         value = quantize_value(Decimal(value), decimal_digits=0, normalize=True)
+
     value = humanize_value(value)
     value = f'{prefix}{value}'
+
     return styled_text(indent_text(value), style)
 
 
 def format_value_change(value_change, suffix=PCT_SUFFIX):
     qh_value_change = humanize_value(quantize_value_change(value_change))
     prefix = ''
-    if value_change == 0:
+    if value_change.is_zero():
         style = console_styles.value_change_zero
     elif value_change > 0:
         prefix = '+'

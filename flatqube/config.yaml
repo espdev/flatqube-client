@@ -13,8 +13,9 @@ token_white_list_url: "https://raw.githubusercontent.com/broxus/ton-assets/maste
 
 # Quantize options for numeric values
 quantize:
+  # Value decimal significant digits
   value_decimal_digits:
-    1: 4  # 1.2345
+    1: 4  # 0.001234, 0.1234, 1.2345
     2: 3  # 12.345
     3: 2  # 123.45
     4: 1  # 1,234.5
