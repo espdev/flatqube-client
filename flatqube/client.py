@@ -150,7 +150,7 @@ class FlatQubeClient:
                    addresses: Iterable[str],
                    sort_by: Union[str, CurrencySortBy] = CurrencySortBy.tvl,
                    sort_order: Union[str, SortOrder] = SortOrder.ascend) -> list[CurrencyInfo]:
-        """Get currencies info by names
+        """Get currencies info by addresses
         """
 
         addresses = list(addresses)
