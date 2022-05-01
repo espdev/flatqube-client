@@ -18,7 +18,7 @@ quantize:
   value_change_decimal_digits: 2
   value_change_normalize: false
 
-cli_colors:
+cli_styles:
   error:
     fg: "bright_red"
     bold: true
@@ -31,32 +31,17 @@ cli_colors:
     fg: "yellow"
     bold: true
 
-  table:
-    fg: "bright_black"
-    bold: true
-
-  name:
-    fg: "cyan"
-    bold: true
-
-  value:
-    fg: "white"
-    bold: true
-
-  value_change_zero:
-    fg: "white"
-    bold: false
-
-  value_change_plus:
-    fg: "green"
-    bold: true
-
-  value_change_minus:
-    fg: "red"
-    bold: true
+  table: "not bold bright_black"
+  name: "bold bright_cyan"
+  value: "bold bright_white"
+  value_change_zero: "not bold white"
+  value_change_plus: "not bold green"
+  value_change_minus: "not bold red"
 
 cli_table:
-  border_char: '│'
+  border: '│'
+  sort_ascend: '▴'
+  sort_descend: '▾'
 
 cli:
   currency:

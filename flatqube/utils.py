@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from decimal import Decimal
-from typing import Optional, Union
+from typing import Optional
 
 import humanize
 
@@ -27,8 +27,5 @@ def humanize_value(value: Decimal) -> str:
     return humanize.intcomma(f'{value:f}')
 
 
-def len_decimal(value: Decimal, plus: bool = False) -> int:
-    value_len = len(humanize_value(value))
-    if plus and not value.is_signed():
-        value_len += 1
-    return value_len
+def styled_text(text: str, style: str):
+    return f'[{style}]{text}'
