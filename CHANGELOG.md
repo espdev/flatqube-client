@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.1 (01.05.2022)
+
+- Fix `currency show` command for default (`whitelist`) list
+- Add QUSA meme token to "meme" list
+- Update readme
+
 ## v0.2.0 (30.04.2022)
 
 - Improve the client API
