@@ -386,6 +386,9 @@ def show(ctx: click.Context,
             return
         add_currency_list_to_config('_whitelist', currencies)
 
+    if not currency_names and not currency_lists:
+        currency_lists = ['whitelist']
+
     currency_addresses = []
 
     if currency_names:
