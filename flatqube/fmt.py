@@ -95,7 +95,8 @@ def format_value_change(value_change, suffix=PCT_SUFFIX):
 def print_currencies_info(currencies_info: list[CurrencyInfo],
                           sort: CurrencySortBy,
                           sort_order: SortOrder,
-                          show_trans_count: bool):
+                          show_trans_count: bool = False,
+                          show_fee: bool = False):
     """Print currency info in console
     """
 
@@ -108,6 +109,7 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
     vol_24h_change_title = PCT_SUFFIX
     vol_7d_title = '7d Volume'
     trans_24h_title = '24h Tr-s'
+    fee_24h_title = '24h Fee'
 
     if len(currencies_info) > 1:
         if sort_order == SortOrder.ascend:
@@ -136,6 +138,8 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
         vol_7d_title = add_sort_indicator(vol_7d_title)
     elif sort == CurrencySortBy.transaction_count_24h:
         trans_24h_title = add_sort_indicator(trans_24h_title)
+    elif sort == CurrencySortBy.fee_24h:
+        fee_24h_title = add_sort_indicator(fee_24h_title)
 
     currencies_table = Table.grid()
 
@@ -162,6 +166,10 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
         currencies_table.add_column(header=indent_border, justify=justify)
         currencies_table.add_column(header=indent_text(trans_24h_title), justify=justify)
 
+    if show_fee:
+        currencies_table.add_column(header=indent_border, justify=justify)
+        currencies_table.add_column(header=indent_text(fee_24h_title), justify=justify)
+
     border = styled_text(indent_border, console_styles.table)
 
     for currency_info in currencies_info:
@@ -184,6 +192,12 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
             currency_row += (
                 border,
                 format_value(currency_info.transaction_count_24h, prefix=''),
+            )
+
+        if show_fee:
+            currency_row += (
+                border,
+                format_value(currency_info.fee_24h),
             )
 
         currencies_table.add_row(*currency_row)

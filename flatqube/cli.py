@@ -173,6 +173,7 @@ def currency():
 @click.option('-o', '--sort-order', type=click.Choice(sort_orders), default=cli_cfg.currency.show.sort_order,
               show_default=True, help='Sort order')
 @click.option('-t', '--show-trans-count', is_flag=True, default=False, help='Show 24h transaction count')
+@click.option('-f', '--show-fee', is_flag=True, default=False, help='Show 24h fee')
 @click.option('-u', '--update', is_flag=True, default=False, show_default=True, help='Auto update data')
 @click.option('-i', '--update-interval', type=float, default=cli_cfg.currency.show.update_interval, show_default=True,
               help='Auto update interval in seconds')
@@ -182,7 +183,9 @@ def show(ctx: click.Context,
          currency_lists: Optional[tuple[str]],
          sort: str, sort_order: str,
          show_trans_count: bool,
-         update: bool, update_interval: float):
+         show_fee: bool,
+         update: bool,
+         update_interval: float):
     """Show currencies info
     """
 
@@ -248,7 +251,7 @@ def show(ctx: click.Context,
             fail(ctx, f"Failed to get currencies info", err=err)
             return
 
-        print_currencies_info(currencies_info, sort, sort_order, show_trans_count)
+        print_currencies_info(currencies_info, sort, sort_order, show_trans_count, show_fee)
 
         if not update:
             break

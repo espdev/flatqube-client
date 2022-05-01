@@ -60,6 +60,7 @@ class CurrencySortBy(SortBy[CurrencyInfo], str, Enum):
     volume_change_24h = 'vol24h-ch'
     volume_7d = 'vol7d'
     transaction_count_24h = 'trans24h'
+    fee_24h = 'fee24h'
 
 
 class FlatQubeClient:
