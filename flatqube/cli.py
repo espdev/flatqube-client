@@ -6,7 +6,7 @@ import sys
 
 import click
 
-from .config import config, add_currency_to_config, config_paths, add_currency_list_to_config
+from .config import config, add_currency_to_config, config_paths, add_currency_list_to_config, WHITE_LIST, DEFAULT_LIST
 from .constants import CLI_NAME
 from .client import FlatQubeClient, CurrencySortBy, SortOrder
 from .fmt import print_config_currencies, print_currencies_info, styled_text
@@ -86,7 +86,7 @@ def update_whitelist(ctx: click.Context):
         fail(ctx, f"Failed to get whitelist currencies", err=err)
         return
 
-    add_currency_list_to_config('_whitelist', currencies)
+    add_currency_list_to_config(WHITE_LIST, currencies)
 
     click.echo(f'The whitelist was updated with {len(currencies)} currencies')
 
@@ -103,7 +103,7 @@ def show_currencies(ctx: click.Context, currency_list: str):
             fail(ctx, f"'{currency_list}' does not exist.")
         currencies = {name: address for name, address in config.currencies[currency_list].items()}
     else:
-        currencies = config.currencies['_whitelist']
+        currencies = config.currencies[WHITE_LIST]
 
     if not currencies:
         warn("There is nothing to show.")
@@ -191,7 +191,7 @@ def show(ctx: click.Context,
 
     client: FlatQubeClient = ctx.obj['client']
 
-    if not config.currencies['_whitelist']:
+    if not config.currencies[WHITE_LIST]:
         try:
             currencies = {
                 cr.name.upper(): cr.address for cr in client.whitelist_currencies()
@@ -199,7 +199,7 @@ def show(ctx: click.Context,
         except Exception as err:
             fail(ctx, f"Failed to get whitelist currencies", err=err)
             return
-        add_currency_list_to_config('_whitelist', currencies)
+        add_currency_list_to_config(WHITE_LIST, currencies)
 
     if not currency_names and not currency_lists:
         currency_lists = [cli_cfg.currency.show.default_list]
@@ -207,8 +207,8 @@ def show(ctx: click.Context,
     currency_addresses = []
 
     if currency_names:
-        whitelist = config.currencies['_whitelist']
-        default = config.currencies['_default']
+        whitelist = config.currencies[WHITE_LIST]
+        default = config.currencies[DEFAULT_LIST]
 
         for name in currency_names:
             name = name.upper()
