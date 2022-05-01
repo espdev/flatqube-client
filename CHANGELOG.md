@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.4 (02.05.2022)
+
+- Use rich package for formatting and styling text in CLI
+- Add optional "24h Fee" info to `currency show` CLI command
+
 ## v0.2.3 (01.05.2022)
 
 - Change CLI structure
