@@ -18,30 +18,31 @@ quantize:
   value_change_decimal_digits: 2
   value_change_normalize: false
 
-cli_styles:
-  error:
-    fg: "bright_red"
-    bold: true
+console:
+  styles:
+    error:
+      fg: "bright_red"
+      bold: true
 
-  warning:
-    fg: "yellow"
-    bold: false
+    warning:
+      fg: "yellow"
+      bold: false
 
-  address:
-    fg: "yellow"
-    bold: true
+    address:
+      fg: "yellow"
+      bold: true
 
-  table: "not bold bright_black"
-  name: "bold bright_cyan"
-  value: "bold bright_white"
-  value_change_zero: "not bold white"
-  value_change_plus: "not bold green"
-  value_change_minus: "not bold red"
+    table: "not bold bright_black"
+    name: "bold bright_cyan"
+    value: "bold bright_white"
+    value_change_zero: "not bold white"
+    value_change_plus: "not bold green"
+    value_change_minus: "not bold red"
 
-cli_table:
-  border: '│'
-  sort_ascend: '▴'
-  sort_descend: '▾'
+  table:
+    border: '│'
+    sort_ascend: '▴'
+    sort_descend: '▾'
 
 cli:
   currency:
