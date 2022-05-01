@@ -13,6 +13,9 @@ ROOT_PATH = Path(__file__).parent
 DEFAULT_CONFIG_PATH = ROOT_PATH / 'config.yaml'
 USER_CONFIG_PATH = Path(appdirs.user_config_dir(APP_NAME)) / 'config.yaml'
 
+WHITE_LIST = '_whitelist'
+DEFAULT_LIST = '_default'
+
 
 class ConfigError(Exception):
     pass
@@ -174,7 +177,7 @@ def add_currency_to_config(name: str, address: str, list_name: Optional[str] = N
     """Add a new currency to the user config
     """
 
-    list_name = list_name or '_default'
+    list_name = list_name or DEFAULT_LIST
 
     cfg = _load_or_create_user_config({
         'currencies': {

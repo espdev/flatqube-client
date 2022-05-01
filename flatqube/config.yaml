@@ -1,63 +1,47 @@
 ---
 
+# FlatQube public API URLs
 api_urls:
   swap_indexer: "https://ton-swap-indexer.broxus.com/v1"
   farming_indexer: "https://farming-pool-indexer.broxus.com/v1"
 
+# The limit of items per request to get a bulk of data from the API
 api_bulk_limit: 200
+
+# Broxus whitelist URL (manifest file)
 token_white_list_url: "https://raw.githubusercontent.com/broxus/ton-assets/master/manifest.json"
 
+# Quantize options for numeric values
 quantize:
+  # Value decimal significant digits
   value_decimal_digits:
-    1: 4
-    2: 3
-    3: 2
-    4: 1
-    5: 0
+    1: 4  # 0.001234, 0.1234, 1.2345
+    2: 3  # 12.345
+    3: 2  # 123.45
+    4: 1  # 1,234.5
+    5: 0  # 12,345
 
   value_change_decimal_digits: 2
   value_change_normalize: false
 
-cli_colors:
-  error:
-    fg: "bright_red"
-    bold: true
-
-  warning:
-    fg: "yellow"
-    bold: false
-
-  address:
-    fg: "yellow"
-    bold: true
+console:
+  styles:
+    error: "bold bright_red"
+    warning: "not bold yellow"
+    address: "bold bright_blue"
+    table: "not bold bright_black"
+    name: "bold bright_cyan"
+    value: "bold bright_white"
+    value_change_zero: "not bold white"
+    value_change_plus: "not bold green"
+    value_change_minus: "not bold red"
 
   table:
-    fg: "bright_black"
-    bold: true
+    border: '│'
+    sort_ascend: '▴'
+    sort_descend: '▾'
 
-  name:
-    fg: "cyan"
-    bold: true
-
-  value:
-    fg: "white"
-    bold: true
-
-  value_change_zero:
-    fg: "white"
-    bold: false
-
-  value_change_plus:
-    fg: "green"
-    bold: true
-
-  value_change_minus:
-    fg: "red"
-    bold: true
-
-cli_table:
-  border_char: '│'
-
+# Default values for CLI command options
 cli:
   currency:
     show:
@@ -74,6 +58,7 @@ currencies:
 
   # Broxus whitelist
   _whitelist: {}
+
   whitelist: ${currencies._whitelist}
 
   # Everscale ecosystem

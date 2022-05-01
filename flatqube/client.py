@@ -57,7 +57,7 @@ class CurrencySortBy(SortBy[CurrencyInfo], str, Enum):
     tvl = 'tvl'
     tvl_change = 'tvl-ch'
     volume_24h = 'vol24h'
-    volume_24h_change = 'vol24h-ch'
+    volume_change_24h = 'vol24h-ch'
     volume_7d = 'vol7d'
     transaction_count_24h = 'trans24h'
 

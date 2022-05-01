@@ -21,6 +21,7 @@ appdirs = "^1.4.4"
 requests = "^2.27.1"
 pydantic = "^1.9.0"
 humanize = "^4.0.0"
+rich = "^12.3.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
