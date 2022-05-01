@@ -61,7 +61,7 @@ cli_table:
 cli:
   currency:
     show:
-      default_list: "everscale"
+      default_list: "whitelist"
       sort: "tvl"
       sort_order: "descend"
       update_interval: 5.0  # seconds
