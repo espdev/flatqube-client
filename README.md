@@ -55,7 +55,7 @@ flatqube currency show weth wbtc -l everscale -l stable
 Also, we can run cli in "auto-update" mode with interval 3 seconds (by default update interval is 5 seconds):
 
 ```
-flatqube currency show -l all -s price-ch -u -i3
+flatqube currency show -s price-ch -u -i3
 ```
 
 See help for more info about `currency show` command:
