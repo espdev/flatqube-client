@@ -28,19 +28,17 @@ Show selected currencies:
 flatqube currency show wever qube bridge
 ```
 
-Show the default list (`everscale`) of currencies:
+Show the default (`whitelist`) list of currencies:
 
 ```
 flatqube currency show
 ```
 
-Also, we can show some list, "star" for example:
+Also, we can show some list, "everscale" for example:
 
 ```
-flatqube currency show -l star
+flatqube currency show -l everscale
 ```
-
-![2022-04-27_20-34-34](https://user-images.githubusercontent.com/1299189/165585978-08d49363-7f0f-408b-ba33-e55cae3c630d.png)
 
 Or we can show meme tokens sorted by price change:
 
@@ -48,15 +46,13 @@ Or we can show meme tokens sorted by price change:
 flatqube currency show -l meme -s price-ch
 ```
 
-![2022-04-27_20-58-13](https://user-images.githubusercontent.com/1299189/165589946-e9d1c943-ee13-4689-bf94-c45476674b8c.png)
-
 We can show currencies by names and currencies from multiple lists jointly:
 
 ```
-flatqube currency show weth wbtc -l star -l stable
+flatqube currency show weth wbtc -l everscale -l stable
 ```
 
-Also, we can run cli in "auto-update" mode. By default update interval is 5 seconds:
+Also, we can run cli in "auto-update" mode with interval 3 seconds (by default update interval is 5 seconds):
 
 ```
 flatqube currency show -l all -s price-ch -u -i3
