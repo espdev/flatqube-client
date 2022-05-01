@@ -9,7 +9,7 @@ import click
 from .config import config, add_currency_to_config, config_paths, add_currency_list_to_config
 from .constants import CLI_NAME
 from .client import FlatQubeClient, CurrencySortBy, SortOrder
-from .fmt import print_currencies_info
+from .fmt import print_config_currencies, print_currencies_info, styled_text
 from .version import __version__
 
 
@@ -26,13 +26,16 @@ def fail(ctx: click.Context, message: str, err: Optional[Exception] = None):
     """
 
     message = f'{message}: {err}' if err else message
-    styled_message = click.style(message, fg=cli_styles.error.fg, bold=cli_styles.error.bold)
+    styled_message = styled_text(message, cli_styles.error, rendered=True)
 
     ctx.fail(styled_message)
 
 
 def warn(message: str):
-    styled_message = click.style(message, fg=cli_styles.warning.fg, bold=cli_styles.warning.bold)
+    """Print a warning message
+    """
+
+    styled_message = styled_text(message, cli_styles.warning, rendered=True)
     click.echo(styled_message)
 
 
@@ -102,26 +105,11 @@ def show_currencies(ctx: click.Context, currency_list: str):
     else:
         currencies = config.currencies['_whitelist']
 
-    title_name = 'Name'
-    title_address = 'Address'
+    if not currencies:
+        warn("There is nothing to show.")
+        return
 
-    if currencies:
-        names, addresses = zip(*currencies.items())
-    else:
-        names = ()
-        addresses = ()
-
-    name_max_len = max(len(name) for name in names + (title_name,))
-
-    s = click.style(f' {title_name:>{name_max_len}} {tb_ch} {title_address}\n',
-                    fg=cli_styles.table.fg, bold=cli_styles.table.bold)
-
-    for name, address in zip(names, addresses):
-        s += click.style(f' {name:>{name_max_len}} ', fg=cli_styles.name.fg, bold=cli_styles.name.bold)
-        s += click.style(f'{tb_ch} ', fg=cli_styles.table.fg, bold=cli_styles.table.bold)
-        s += click.style(f'{address}\n', fg=cli_styles.value.fg, bold=cli_styles.value.bold)
-
-    click.echo(s, nl=False)
+    print_config_currencies(currencies)
 
 
 @currency_config.command()
@@ -158,14 +146,14 @@ def add_currency(ctx: click.Context, address: str, list_name: Optional[str]):
 
     add_currency_to_config(currency_info.name, currency_info.address, list_name)
 
-    name = click.style(f'{currency_info.name}', fg=cli_styles.name.fg, bold=cli_styles.name.bold)
-    address = click.style(f'{currency_info.address}', fg=cli_styles.address.fg, bold=cli_styles.address.bold)
+    name = styled_text(currency_info.name, cli_styles.name, rendered=True)
+    address = styled_text(currency_info.address, cli_styles.address, rendered=True)
 
     if list_name:
-        list_name_s = click.style(f'{list_name}', fg=cli_styles.name.fg, bold=cli_styles.name.bold)
-        click.echo(f"{name} {address} was added to '{list_name_s}' list to the user config")
+        list_name_s = styled_text(list_name, cli_styles.name, rendered=True)
+        click.echo(f"Currency {address} ({name}) was added to '{list_name_s}' list to the user config")
     else:
-        click.echo(f"{name} {address} was added to the user config")
+        click.echo(f"Currency {address} ({name}) was added to the user config")
 
 
 @cli.group()
@@ -249,6 +237,7 @@ def show(ctx: click.Context,
     lines = 0
 
     while True:
+        # Clear previous currency info in auto-update mode
         for _ in range(lines):
             sys.stdout.write("\033[F")
             sys.stdout.write("\033[K")

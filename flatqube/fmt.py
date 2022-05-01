@@ -6,6 +6,7 @@ from typing import cast, Literal, Optional
 import humanize
 from rich import print as rich_print
 from rich.table import Table
+from rich.style import Style
 
 from flatqube import CurrencyInfo, CurrencySortBy, SortOrder
 from flatqube.config import config
@@ -16,7 +17,6 @@ PCT_SUFFIX = '%'
 
 console_styles = config.console.styles
 console_table = config.console.table
-border_ch = console_table.border
 
 
 def indent_text(title: str, indent: int = 1):
@@ -28,8 +28,12 @@ def humanize_value(value: Decimal) -> str:
     return humanize.intcomma(f'{value:f}')
 
 
-def styled_text(text: str, style: str):
-    return f'[{style}]{text}'
+def styled_text(text: str, style_def: str, rendered: bool = False):
+    if rendered:
+        style = Style.parse(style_def)
+        return style.render(text)
+    else:
+        return f'[{style_def}]{text}'
 
 
 def quantize_value(value: Decimal, decimal_digits: Optional[int] = None, normalize: bool = True) -> Decimal:
@@ -128,7 +132,7 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
     currencies_table.show_header = True
     currencies_table.header_style = console_styles.table
 
-    indent_border = indent_text(border_ch)
+    indent_border = indent_text(console_table.border)
     justify = cast(Literal, 'right')
 
     currencies_table.add_column(header=indent_text(name_title), justify=justify)
@@ -175,3 +179,30 @@ def print_currencies_info(currencies_info: list[CurrencyInfo],
         currencies_table.add_row(*currency_row)
 
     rich_print(currencies_table)
+
+
+def print_config_currencies(currencies: dict[str, str]):
+    """Print currencies from config
+    """
+
+    indent_border = indent_text(console_table.border)
+
+    table = Table.grid()
+
+    table.show_header = True
+    table.header_style = console_styles.table
+
+    table.add_column(header=indent_text('Name'), justify='right')
+    table.add_column(header=indent_border, justify='right')
+    table.add_column(header=indent_text('Address'), justify='left')
+
+    border = styled_text(indent_border, console_styles.table)
+
+    for name, address in currencies.items():
+        table.add_row(
+            styled_text(indent_text(name), console_styles.name),
+            border,
+            styled_text(indent_text(address), console_styles.value)
+        )
+
+    rich_print(table)
