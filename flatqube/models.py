@@ -3,7 +3,7 @@
 from typing import Optional
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, Extra
+from pydantic import BaseModel, Extra, Field
 
 
 class CurrencyInfo(BaseModel):

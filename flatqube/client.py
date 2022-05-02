@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, Optional, Union, Iterable, Generic, TypeVar, Type
+from typing import Any, Generic, Iterable, Optional, Type, TypeVar, Union
+from decimal import Decimal
 from enum import Enum
 from operator import attrgetter
-from decimal import Decimal
 
-import requests
 from pydantic import ValidationError
+import requests
 
 from .config import config
-from .models import CurrencyInfo, PairInfo, FarmingPoolInfo
+from .models import CurrencyInfo, FarmingPoolInfo, PairInfo
 
 
 class FlatQubeClientError(Exception):

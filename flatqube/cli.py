@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional
-import time
 import sys
+import time
 
 import click
 
-from .config import config, add_currency_to_config, config_paths, add_currency_list_to_config, WHITE_LIST, DEFAULT_LIST
+from .client import CurrencySortBy, FlatQubeClient, SortOrder
+from .config import DEFAULT_LIST, WHITE_LIST, add_currency_list_to_config, add_currency_to_config, config, config_paths
 from .constants import CLI_NAME
-from .client import FlatQubeClient, CurrencySortBy, SortOrder
 from .fmt import print_config_currencies, print_currencies_info, styled_text
 from .version import __version__
 

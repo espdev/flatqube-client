@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from typing import Literal, Optional, cast
 from decimal import Decimal
-from typing import cast, Literal, Optional
 
 import humanize
 from rich import print as rich_print
-from rich.table import Table
 from rich.style import Style
+from rich.table import Table
 
 from flatqube import CurrencyInfo, CurrencySortBy, SortOrder
 from flatqube.config import config
