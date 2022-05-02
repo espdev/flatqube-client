@@ -23,6 +23,45 @@ class CurrencyInfo(BaseModel):
     transaction_count_24h: int = Field(alias='transactionsCount24h')
 
 
+class PairMetaInfo(BaseModel):
+    """Pair meta info
+    """
+
+    left_name: str = Field(alias='base')
+    left_address: str = Field(alias='baseAddress')
+    right_name: str = Field(alias='counter')
+    right_address: str = Field(alias='counterAddress')
+    pool_address: str = Field(alias='poolAddress')
+    fee: Decimal
+
+
+class PairInfo(BaseModel):
+    """Pair info
+    """
+
+    fee_24h: Decimal = Field(alias='fee24h')
+    fee_7d: Decimal = Field(alias='fee7d')
+    fee_all_time: Decimal = Field(alias='feeAllTime')
+    left_locked: Decimal = Field(alias='leftLocked')
+    right_locked: Decimal = Field(alias='rightLocked')
+    left_price: Decimal = Field(alias='leftPrice')
+    right_price: Decimal = Field(alias='rightPrice')
+    tvl: Decimal
+    tvl_change: Decimal = Field(alias='tvlChange')
+    volume_24h: Decimal = Field(alias='volume24h')
+    volume_change_24h: Decimal = Field(alias='volumeChange24h')
+    volume_7d: Decimal = Field(alias='volume7d')
+    meta: PairMetaInfo
+
+    @property
+    def name(self) -> str:
+        return f'{self.meta.left_name}/{self.meta.right_name}'
+
+    @property
+    def address(self) -> str:
+        return self.meta.pool_address
+
+
 class RewardTokenInfo(BaseModel):
     """Reward token info
     """
