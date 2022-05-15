@@ -81,6 +81,7 @@ currencies:
     USDT: "0:a519f99bb5d6d51ef958ed24d337ad75a1c770885dcd42d51d6663f9fcdacfb2"
     USDC: "0:c37b3fafca5bf7d3704b081fde7df54f298736ee059bf6d32fac25f5e6085bf6"
     DAI: "0:eb2ccad2020d9af9cec137d3146dde067039965c13a27d97293c931dae22b2b9"
+    FRAX: "0:efed9f9a7e6c455ee60829fd003b2f42edda513c6f19a484f916b055e9aa58d2"
     EUPI: "0:0cfa60f9454b1b619938c4da6a138b1cc62da937b3f6c0506405daf2a88e0115"
 
   # Memcoins
