@@ -9,7 +9,7 @@ api_urls:
 api_bulk_limit: 200
 
 # Broxus whitelist URL (manifest file)
-token_white_list_url: "https://raw.githubusercontent.com/broxus/ton-assets/master/manifest.json"
+token_white_list_url: "https://raw.githubusercontent.com/broxus/flatqube-assets/master/manifest.json"
 
 # Quantize options for numeric values
 quantize:
