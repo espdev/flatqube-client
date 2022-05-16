@@ -95,3 +95,8 @@ currencies:
     COLA: "0:9dd2cd82cbfd74a963be1ef1fd1a1f3e25f60e0b8c742f8b862df378b9a5e265"
     QUSA: "0:269e93ca4b8248e81314d412049f62cb0d84af29aca3a99f28792cee2da2561d"
     PURP: "0:9d49206b0eaadc5125c6b5e30410505db7740f827857915922cdb7efe199b622"
+
+  # Dexada (https://dexada.io)
+  dexada:
+    EVA: "0:eaf911b4bc7f9691f9114e32919845a997b3b626add345c67a933ed20b59e9e4"
+    ADA: "0:152a7c50f7df2f305b56a1dd7e254d84a5aed018ba44b920f28def735215baa1"
