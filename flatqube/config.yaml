@@ -3,7 +3,7 @@
 # FlatQube public API URLs
 api_urls:
   swap_indexer: "https://api.flatqube.io/v1"
-  farming_indexer: "https://farming-pool-indexer.broxus.com/v1"
+  farming_indexer: "https://farming.flatqube.io"
 
 # The limit of items per request to get a bulk of data from the API
 api_bulk_limit: 200
