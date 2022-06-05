@@ -94,7 +94,7 @@ currencies:
     RUM: "0:38a4c196c7fe22cbf0cda034ddda284aa208e2dba7707b96f65914420ba3f580"
     COLA: "0:9dd2cd82cbfd74a963be1ef1fd1a1f3e25f60e0b8c742f8b862df378b9a5e265"
     QUSA: "0:269e93ca4b8248e81314d412049f62cb0d84af29aca3a99f28792cee2da2561d"
-    PURP: "0:9d49206b0eaadc5125c6b5e30410505db7740f827857915922cdb7efe199b622"
+    PURR: "0:9d49206b0eaadc5125c6b5e30410505db7740f827857915922cdb7efe199b622"
 
   # Dexada (https://dexada.io)
   dexada:
